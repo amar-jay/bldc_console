@@ -15,9 +15,13 @@ declare global {
 
 	/** define a usb device type */ 
 	type Device = {
-	  id: string
-	  name: string
-	  vendor?: string
 	  connected?: boolean
+		path: string
+	  manufacturer?: string
+	  serialNumber?: string
+	  pnpId?: string
+	  locationId?: string
+	  productId?: string
+	  vendorId?: string
 	}
 }

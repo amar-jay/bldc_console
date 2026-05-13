@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
+import { toast } from "sonner"
 
 export const useUsbDevices = () => {
   const [devices, setDevices] = useState<Device[]>([])
@@ -7,11 +8,15 @@ export const useUsbDevices = () => {
   const onConnect = useCallback(async (device: Device) => {
     setLoading(true)
     try {
-      const updated = await window.api.usb.connect(device.id)
-
-      setDevices(prev =>
-        prev.map(d => (d.id === updated.id ? updated : d))
-      )
+      await window.api.usb.connect(device.path)
+      const freshDevices = await window.api.usb.list()
+      setDevices(freshDevices)
+      toast.success(`Connected to ${device.manufacturer || device.path}`)
+    } catch (error) {
+      const res = await window.api.usb.list()
+      setDevices(res)
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error(`Connection failed: ${message}`)
     } finally {
       setLoading(false)
     }
@@ -22,6 +27,26 @@ export const useUsbDevices = () => {
     try {
       const res = await window.api.usb.refresh()
       setDevices(res)
+      toast.info("Device list refreshed")
+    } catch (error) {
+      toast.error("Failed to refresh devices")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const onDisconnect = useCallback(async (path: string) => {
+    setLoading(true)
+    try {
+      const updated = await window.api.usb.disconnect(path)
+      
+      // Force update the local state with the returned devices
+      const freshDevices = await window.api.usb.list()
+      setDevices(freshDevices)
+      
+      toast.info("Disconnected")
+    } catch (error) {
+      toast.error("Failed to disconnect", error instanceof Error ? { description: error.message } : undefined)
     } finally {
       setLoading(false)
     }
@@ -60,5 +85,6 @@ export const useUsbDevices = () => {
     loading,
     onConnect,
     onRefresh,
+    onDisconnect,
   }
 }

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("api", {
   usb: {
     list: () => ipcRenderer.invoke("usb:list"),
     connect: (id: string) => ipcRenderer.invoke("usb:connect", id),
+		disconnect: (id: string) => ipcRenderer.invoke("usb:disconnect", id),
     refresh: () => ipcRenderer.invoke("usb:refresh"),
     onUpdate: (cb: (devices: any[]) => void) => {
       const handler = (_: any, devices: any[]) => cb(devices)

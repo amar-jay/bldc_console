@@ -23,28 +23,37 @@ import { cn } from "@/lib/utils"
 import {useState } from "react"
 import { DeviceListDropDown } from "./device-list"
 
+
+import { useNavigate } from "react-router-dom"
+
 export default function TopBar() {
-	const { devices, loading, onConnect, onRefresh } = useUsbDevices()
-	// const [isDeviceList, setDeviceList] = useState(false)
-	// const [devices, setDevices] = useState([
-	// 	{id: "1", name: "Device 1", vendor: "Vendor A", connected: false},
-	// 	{id: "2", name: "Device 2", vendor: "Vendor B", connected: false},	
-	// ])
-	// const [loadingDevices, setLoadingDevices] = useState(false)
+  const navigate = useNavigate()
+  const { devices, loading, onConnect, onRefresh, onDisconnect } = useUsbDevices()
 
-	const handleConnect = (device) => {
-		console.log("Connecting to device:", device)
-	}
+  const openSettingsWindow = () => {
+    if (window.api) {
+      window.api.openNewWindow('settings')
+    } else {
+      console.warn('Electron API is not available in the browser environment.')
+    }
+  }
 
-	const refreshDevices = () => {
-		console.log("Refreshing device list...")
-		// Implement your device discovery logic here
-	}
+  const navigateToConsole = () => {
+    navigate('/console')
+  }
+
+  const navigateToDashboard = () => {
+    navigate('/')
+  }
+
   return (
     <header className="w-full h-8 border-b flex items-center px-3 bg-background text-xs">
       
       {/* LEFT: Brand */}
-      <div className="flex items-center gap-2 font-semibold text-sm">
+      <div 
+        className="flex items-center gap-2 font-semibold text-sm cursor-pointer hover:opacity-80"
+        onClick={navigateToDashboard}
+      >
         <span>BLDC Console</span>
       </div>
 
@@ -52,9 +61,9 @@ export default function TopBar() {
       <div className="ml-6 hidden md:flex">
         <Menubar className="border-none shadow-none">
           <MenubarMenu>
-            <MenubarTrigger>Dashboard</MenubarTrigger>
+            <MenubarTrigger onClick={navigateToDashboard}>Dashboard</MenubarTrigger>
             <MenubarContent>
-              <MenubarItem>Overview</MenubarItem>
+              <MenubarItem onClick={navigateToDashboard}>Overview</MenubarItem>
               <MenubarItem>Analytics</MenubarItem>
             </MenubarContent>
           </MenubarMenu>
@@ -67,14 +76,18 @@ export default function TopBar() {
               <MenubarItem>Logs</MenubarItem>
             </MenubarContent>
           </MenubarMenu>
+					<MenubarMenu>
+            <MenubarTrigger onClick={navigateToConsole}>Console</MenubarTrigger>
+					</MenubarMenu>
 
           <MenubarMenu>
-            <MenubarTrigger>Settings</MenubarTrigger>
-            <MenubarContent>
+            <MenubarTrigger onClick={openSettingsWindow}>Settings</MenubarTrigger>
+            {/* <MenubarContent>
               <MenubarItem>Profile</MenubarItem>
               <MenubarItem>System</MenubarItem>
             </MenubarContent>
-          </MenubarMenu>
+         */}
+						</MenubarMenu> 
         </Menubar>
       </div>
 
@@ -82,7 +95,7 @@ export default function TopBar() {
       <div className="ml-auto flex items-center gap-2">
 
         {/* Quick action */}
-				<DeviceListDropDown devices={devices} onConnect={onConnect} onRefresh={onRefresh} loading={loading}/>
+				<DeviceListDropDown devices={devices} onConnect={onConnect} onRefresh={onRefresh} onDisconnect={onDisconnect} loading={loading}/>
 
         {/* Dropdown menu */}
         <DropdownMenu>

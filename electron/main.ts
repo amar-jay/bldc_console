@@ -1,14 +1,20 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import isDev from 'electron-is-dev'
+import { connectDevice, listDevices } from './lib/serial'
 
 // Multi-window support
 const windows = new Set<BrowserWindow>()
 
 export function createWindow(urlPath: string = '') {
+  const isSubWindow = urlPath !== ''
+  
   const win = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: isSubWindow ? 700 : 1024,
+    height: isSubWindow ? 570 : 768,
+    frame: isSubWindow? false: true, // Ensure transparent/rounded works everywhere
+    transparent: isSubWindow ? true: false, // Required for rounded corners on frameless windows
+    titleBarStyle: isSubWindow ? 'hidden' : 'default', // Hide title bar for sub-windows
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -37,27 +43,91 @@ export function createWindow(urlPath: string = '') {
 
 // ---- usb related IPC handlers (example) ----
 
-// demo in-memory device list to simulate USB devices
-let devices = [
-  { id: "1", name: "BLDC Controller", vendor: "ACME", connected: false },
-  { id: "2", name: "Motor Debugger", vendor: "ACME", connected: false },
-]
+let devices: any[] = []
+let connectedPort: any = null
+let connectedPath: string | null = null
 
 ipcMain.handle("usb:list", async () => {
+  const freshDevices = await listDevices()
+  devices = freshDevices.map((d) => ({
+    ...d,
+    connected: d.path === connectedPath,
+  }))
   return devices
 })
 
-ipcMain.handle("usb:connect", async (_, id: string) => {
-  devices = devices.map(d =>
-    d.id === id ? { ...d, connected: true } : d
-  )
+ipcMain.handle("usb:connect", async (_, path: string) => {
+  try {
+    if (connectedPath === path) return devices.find((d) => d.path === path)
 
-  return devices.find(d => d.id === id)
+    if (connectedPort) {
+      // close current connection before opening new one
+      await new Promise<void>((resolve, reject) => {
+        connectedPort.close((err: any) => {
+          if (err) reject(err)
+          else resolve()
+        })
+      })
+      connectedPort = null
+      connectedPath = null
+    }
+
+    connectedPort = await connectDevice(path)
+    connectedPath = path
+
+    devices = devices.map((d) =>
+      d.path === path ? { ...d, connected: true } : { ...d, connected: false }
+    )
+
+    // Notify all windows about the change
+    windows.forEach(win => {
+      win.webContents.send("usb:on-update", devices)
+    })
+
+    return devices.find((d) => d.path === path)
+  } catch (error) {
+    console.error("USB Connect Error:", error)
+    throw error
+  }
 })
 
 ipcMain.handle("usb:refresh", async () => {
-  // simulate re-scan
+  const freshDevices = await listDevices()
+  devices = freshDevices.map((d) => ({
+    ...d,
+    connected: d.path === connectedPath,
+  }))
   return devices
+})
+
+ipcMain.handle("usb:disconnect", async (_, path: string) => {
+  try {
+    if (connectedPort && connectedPath === path) {
+      // Assuming SerialPort instance has a close method
+      await new Promise<void>((resolve, reject) => {
+        connectedPort.close((err: any) => {
+          if (err) reject(err)
+          else resolve()
+        })
+      })
+      connectedPort = null
+      connectedPath = null
+    }
+
+    devices = devices.map((d) =>
+      d.path === path ? { ...d, connected: false } : d
+    )
+
+    // Notify all windows about the change
+    windows.forEach(win => {
+      win.webContents.send("usb:on-update", devices)
+    })
+
+    return devices.find((d) => d.path === path)
+  } catch (error) {
+    console.error("USB Disconnect Error:", error)
+    throw error
+  }
 })
 // -----------------------------------------
 

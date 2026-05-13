@@ -6,6 +6,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html, body {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+}
+
+.drag-area {
+    -webkit-app-region: drag;
+}
+
+.no-drag-area {
+    -webkit-app-region: no-drag;
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.147 0.004 49.3);
