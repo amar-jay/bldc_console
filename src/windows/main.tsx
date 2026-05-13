@@ -26,67 +26,58 @@ export default function Main() {
 		<div className="min-h-screen bg-background text-foreground">
 
 		<TopBar/>
-		<div className="flex p-6 max-w-md min-w-0 flex-col gap-4 text-sm leading-loose w-full">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button onClick={openSettingsWindow} className="mt-2">
-          Spawn Settings in New Window
-					</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-		<Link to="/settings">(Press <kbd>d</kbd> to toggle dark mode)</Link>
-        </div>
+		<div className="flex px-6 pt-3 max-w-md min-w-0 flex-col gap-1 text-sm leading-loose w-full">
+			  {/* <h1 className="font-medium">BLDC Console</h1> */}
+			  <p className="text-sm">
+			    Real-time sensorless FOC diagnostics, motor telemetry, and ESC tuning interface.
+			  </p>
+
+			  <p className="text-xs text-muted-foreground">
+			    By Alperen Sahin & Amar Jay
+			  </p>
+
+			  <Button onClick={openSettingsWindow} className="mt-1 w-max">
+			    Connect ESC
+			  </Button>
+				<div className="font-mono text-xs text-muted-foreground">
 			</div>
+		</div>
+    <div className="flex px-6">
+      <div className="px-6 pt-6 grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-cols-1 min-w-md gap-4 text-sm leading-loose w-full">
+        
+				{/* <div> */}
+        <CardWrapper title="Motor Speed" route="card/motor-speed">
+				  <MotorSpeedCard/>
+        </CardWrapper>
 
-			<div className="p-6">
-  <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-    
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="Motor Characteristics" route="card/motor-xtics">
-        <MotorXticsCard />
-      </CardWrapper>
+        <CardWrapper title="Phase Currents" route="card/phase-currents">
+				  <PhaseCurrentsCard />
+        </CardWrapper>
+
+        <CardWrapper title="DQ Reference Frame" route="card/dq-frame">
+          <DQRefFrameCard />
+        </CardWrapper>
+
+        <CardWrapper title="Electrical vs Mechanical Angle" route="card/elec-mech">
+          <ElecMechAngleCard />
+        </CardWrapper>
+
+        <CardWrapper title="Phase Voltages" route="card/phase-voltage">
+				  <PhaseVoltageCard />
+        </CardWrapper>
+
+        <CardWrapper title="Motor Characteristics" route="card/motor-xtics">
+				  <MotorXticsCard/>
+        </CardWrapper>
+
+        <CardWrapper title="Battery Capacity" route="card/battery-cap">
+				  <BatteryCapCard/>
+        </CardWrapper>
+				</div>
+
+
+      {/* </div> */}
     </div>
-
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="Electrical vs Mechanical Angle" route="card/elec-mech">
-        <ElecMechAngleCard />
-      </CardWrapper>
-    </div>
-
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="Phase Currents" route="card/phase-currents">
-        <PhaseCurrentsCard />
-      </CardWrapper>
-    </div>
-
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="Motor Speed" route="card/motor-speed">
-        <MotorSpeedCard />
-      </CardWrapper>
-    </div>
-
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="DQ Reference Frame" route="card/dq-frame">
-        <DQRefFrameCard />
-      </CardWrapper>
-    </div>
-
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="Phase Voltages" route="card/phase-voltage">
-        <PhaseVoltageCard />
-      </CardWrapper>
-    </div>
-
-    <div className="break-inside-avoid mb-4">
-      <CardWrapper title="Battery Capacity" route="card/battery-cap">
-        <BatteryCapCard />
-      </CardWrapper>
-    </div>
-
-  </div>
-</div>
 		</div>
   )
 }

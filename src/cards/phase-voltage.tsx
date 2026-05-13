@@ -26,9 +26,9 @@ export default function PhaseVoltageCard() {
           Real-time waveform tracking for Phase A, B, and C.
         </p>
       </div>
-      <div className="flex-1 w-full animate-in fade-in duration-500">
+      <div className="flex-1 min-h-[200px] w-full animate-in fade-in duration-500">
         <LineChart
-          className="aspect-auto min-h-[200px]"
+          className="size-full"
           data={phaseVoltageData}
           xKey="angle"
           series={[

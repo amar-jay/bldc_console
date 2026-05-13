@@ -5,16 +5,16 @@ const batteryData = [
 ]
 export default function BatteryCapCard() {
 	return (
-        <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm">
+        <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm break-inside-avoid">
           <div className="mb-4 space-y-1 shrink-0">
             <h2 className="text-sm font-medium">Battery Capacity</h2>
             <p className="text-xs text-muted-foreground">
               Total energy consumption and charge remaining.
             </p>
           </div>
-          <div className="flex-1 w-full relative">
+          <div className="flex-1 min-h-[200px] w-full relative">
             <RadialChart
-              className="aspect-auto min-h-[200px]"
+              className="size-full"
               data={batteryData}
               centerLabel="Wh remaining"
               centerValue={360}

@@ -12,7 +12,7 @@ const motorSpeedData = [
 
 export default function MotorSpeedCard() {
 	return (
-        <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm">
+        <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm break-inside-avoid">
           <div className="mb-4 space-y-1 shrink-0">
             <h2 className="text-sm font-medium">Motor speed trend</h2>
             <p className="text-xs text-muted-foreground">

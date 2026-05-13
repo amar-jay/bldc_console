@@ -58,9 +58,9 @@ export default function MotorXticsCard() {
               Radar view for efficiency, torque, and thermal benchmarks.
             </p>
           </div>
-          <div className="flex-1 w-full flex items-center justify-center">
+          <div className="flex-1 min-h-[250px] w-full flex items-center justify-center">
             <RadarChart
-              className="aspect-auto min-h-[250px]"
+              className="size-full"
               data={performanceData}
               indexKey="attribute"
               series={[

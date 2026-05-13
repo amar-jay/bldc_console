@@ -14,9 +14,9 @@ export default function PhaseCurrentsCard() {
               Real-time current distribution across motor phases.
             </p>
           </div>
-          <div className="flex-1 w-full">
+          <div className="flex-1 min-h-[200px] w-full">
             <BarChart
-              className="aspect-auto min-h-[200px]"
+              className="size-full"
               data={currentDrawData}
               xKey="phase"
               series={[

@@ -24,7 +24,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-background border border-accent-foreground/30 shadow-2xl overflow-hidden flex flex-col rounded-2xl">
       {/* Draggable Header */}
-			<SubWindowHeader windowTitle="System Settings" maximazable Icon={SettingsIcon} />
+			<SubWindowHeader windowTitle="System Settings" Icon={SettingsIcon} />
       <div className="flex-1 overflow-y-auto p-6 pt-4">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Internal Page Header */}

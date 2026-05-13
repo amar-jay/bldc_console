@@ -30,9 +30,9 @@ export default function ElecMechAngleCard() {
           Real-time time-series tracking of motor rotor position vs. magnetic field cycles.
         </p>
       </div>
-      <div className="flex-1 w-full animate-in fade-in duration-500">
+      <div className="flex-1 min-h-[200px] w-full animate-in fade-in duration-500">
         <LineChart
-          className="aspect-auto min-h-[200px]"
+          className="size-full"
           data={angleTimeSeriesData}
           xKey="time"
           series={[
