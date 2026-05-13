@@ -9,13 +9,12 @@ import {
   Cpu, 
   Unplug, 
   ShieldCheck,
-  ChevronLeft,
   Save,
   Trash2,
-  X
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import SubWindowHeader from '@/components/sub-window-header'
 
 export default function Settings() {
   const closeWindow = () => {
@@ -25,21 +24,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-background border border-accent-foreground/30 shadow-2xl overflow-hidden flex flex-col rounded-2xl">
       {/* Draggable Header */}
-      <div className="h-10 flex items-center justify-between px-4 bg-muted/30 border-b drag-area select-none">
-        <div className="flex items-center gap-2 opacity-70">
-          <SettingsIcon className="h-3.5 w-3.5" />
-          <span className="text-[11px] font-medium uppercase tracking-wider">System Settings</span>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-6 w-6 no-drag-area hover:bg-destructive hover:text-destructive-foreground transition-colors"
-          onClick={closeWindow}
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-
+			<SubWindowHeader windowTitle="System Settings" maximazable Icon={SettingsIcon} />
       <div className="flex-1 overflow-y-auto p-6 pt-4">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Internal Page Header */}

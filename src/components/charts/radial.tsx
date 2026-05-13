@@ -68,18 +68,17 @@ export function RadialChart<TData extends Record<string, unknown>>({
   }, [series])
 
   return (
-    <div className={cn("mx-auto w-full overflow-hidden relative", className)} {...props}>
-      <div className="absolute top-0 left-0 w-full">
-        <ChartContainer config={config} className="mt-0 w-full h-full">
-          <RechartsRadialBarChart
-            data={data}
-            startAngle={startAngle}
-            endAngle={endAngle}
-            innerRadius={innerRadius}
-            outerRadius={outerRadius}
-            cx="50%"
-            cy="50%"
-          >
+    <div className={cn("mx-auto w-full h-full min-h-0 overflow-hidden relative", className)} {...props}>
+      <ChartContainer config={config} className="size-full">
+        <RechartsRadialBarChart
+          data={data}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          cx="50%"
+          cy="70%"
+        >
             {showTooltip && (
               <ChartTooltip
                 cursor={false}
@@ -133,7 +132,6 @@ export function RadialChart<TData extends Record<string, unknown>>({
             )}
           </RechartsRadialBarChart>
         </ChartContainer>
-      </div>
     </div>
   )
 }

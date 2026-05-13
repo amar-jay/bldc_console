@@ -93,7 +93,7 @@ export function BarChart<TData extends Record<string, unknown>>({
   )
 
   return (
-    <ChartContainer config={config} className={cn("h-80 aspect-auto", className)} {...props}>
+    <ChartContainer config={config} className={cn("aspect-auto min-h-[150px]", className)} {...props}>
       <RechartsBarChart
         data={data}
         layout={layout}

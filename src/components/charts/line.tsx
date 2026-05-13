@@ -94,7 +94,7 @@ function LineChart<TData extends Record<string, unknown>>({
 	)
 
 	return (
-		<ChartContainer config={config} className={cn("h-80 aspect-auto", className)} {...props}>
+		<ChartContainer config={config} className={cn("aspect-auto min-h-[150px]", className)} {...props}>
 			<RechartsLineChart
 				data={data}
 				margin={{ top: 12, right: 8, left: 0, bottom: 0 }}

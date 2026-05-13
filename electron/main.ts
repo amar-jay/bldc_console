@@ -143,6 +143,26 @@ app.whenReady().then(() => {
   ipcMain.on('open-new-window', (_event, path) => {
     createWindow(path)
   })
+
+  ipcMain.on('window:close', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    win?.close()
+  })
+
+  ipcMain.on('window:maximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    win?.maximize()
+  })
+
+  ipcMain.on('window:unmaximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    win?.unmaximize()
+  })
+
+  ipcMain.handle('window:is-maximized', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    return win?.isMaximized() ?? false
+  })
 })
 
 app.on('window-all-closed', () => {
