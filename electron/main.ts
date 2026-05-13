@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import isDev from 'electron-is-dev'
 import { connectDevice, listDevices } from './lib/serial'
+import { Menu } from 'electron'
 
 // Multi-window support
 const windows = new Set<BrowserWindow>()
@@ -21,6 +22,8 @@ export function createWindow(urlPath: string = '') {
       contextIsolation: true,
     },
   })
+
+	Menu.setApplicationMenu(null)
 
   const url = isDev
     ? `http://localhost:5173/#/${urlPath}`

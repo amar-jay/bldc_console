@@ -7,7 +7,8 @@
 @custom-variant dark (&:is(.dark *));
 
 html, body {
-    background: transparent !important;
+    background: var(--background) !important;
+    color: var(--foreground);
     margin: 0;
     padding: 0;
 }
