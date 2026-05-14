@@ -1,11 +1,23 @@
 import { BarChart } from "@/components/charts/bar"
 
-const currentDrawData = [ // demo data, use real data 
+export type PhaseCurrentPoint = {
+  phase: string
+  current: number
+}
+
+const fallbackCurrentDrawData: PhaseCurrentPoint[] = [
   { phase: 'Phase A', current: 12.5 },
   { phase: 'Phase B', current: 14.2 },
   { phase: 'Phase C', current: 13.8 },
 ]
-export default function PhaseCurrentsCard() {
+
+type PhaseCurrentsCardProps = {
+  data?: PhaseCurrentPoint[]
+}
+
+export default function PhaseCurrentsCard({ data }: PhaseCurrentsCardProps) {
+	const chartData = data && data.length > 0 ? data : fallbackCurrentDrawData
+
 	return (
         <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-4 space-y-1 shrink-0">
@@ -14,10 +26,10 @@ export default function PhaseCurrentsCard() {
               Real-time current distribution across motor phases.
             </p>
           </div>
-          <div className="flex-1 min-h-[200px] w-full">
+          <div className="flex-1 min-h-50 w-full">
             <BarChart
               className="size-full"
-              data={currentDrawData}
+              data={chartData}
               xKey="phase"
               series={[
                 { dataKey: 'current', label: 'Amps (A)', radius: [4, 4, 0, 0] },

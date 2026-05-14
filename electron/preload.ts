@@ -28,10 +28,20 @@ contextBridge.exposeInMainWorld("api", {
     },
 	  setupPortReader: () => ipcRenderer.invoke("usb:setup-port-reader"),
 	  onData: (callback: (msg: string) => void) => {
-	    ipcRenderer.on("usb:data", (_, msg) => callback(msg))
+      const handler = (_: unknown, msg: string) => callback(msg)
+      ipcRenderer.on("usb:data", handler)
+      return () => ipcRenderer.removeListener("usb:data", handler)
 	  },
 	  offData: () => {
 	    ipcRenderer.removeAllListeners("usb:data")
+    },
+    onTelemetry: (callback: (telem: unknown) => void) => {
+      const handler = (_: unknown, telem: unknown) => callback(telem)
+      ipcRenderer.on("usb:telem", handler)
+      return () => ipcRenderer.removeListener("usb:telem", handler)
+    },
+    offTelemetry: () => {
+      ipcRenderer.removeAllListeners("usb:telem")
 	  }
   },
 })

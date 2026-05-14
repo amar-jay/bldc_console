@@ -1,5 +1,13 @@
 import { RadarChart } from "@/components/charts/radar"
-const performanceData = [ // demo data, replace with real telemetry
+
+export type MotorXticPoint = {
+  attribute: string
+  phaseA: number
+  phaseB: number
+  phaseC: number
+}
+
+const fallbackPerformanceData: MotorXticPoint[] = [
   {
     attribute: "B-EMF Strength",
     phaseA: 88,
@@ -49,7 +57,14 @@ const performanceData = [ // demo data, replace with real telemetry
     phaseC: 76,
   },
 ]
-export default function MotorXticsCard() {
+
+type MotorXticsCardProps = {
+  data?: MotorXticPoint[]
+}
+
+export default function MotorXticsCard({ data }: MotorXticsCardProps) {
+	const chartData = data && data.length > 0 ? data : fallbackPerformanceData
+
 	return (
 			        <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-4 space-y-1 shrink-0">
@@ -58,10 +73,10 @@ export default function MotorXticsCard() {
               Radar view for efficiency, torque, and thermal benchmarks.
             </p>
           </div>
-          <div className="flex-1 min-h-[250px] w-full flex items-center justify-center">
+          <div className="flex-1 min-h-62.5 w-full flex items-center justify-center">
             <RadarChart
               className="size-full"
-              data={performanceData}
+              data={chartData}
               indexKey="attribute"
               series={[
                 { dataKey: 'phaseA', label: 'Phase A', fillOpacity: 0.5, color: "var(--chart-1)" },

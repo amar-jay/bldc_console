@@ -58,12 +58,9 @@ export default function Console() {
     }
   }
 
-  // Subscribe to incoming serial data from the main process
+  // Subscribe to incoming serial data + telemetry from the main process
   React.useEffect(() => {
-    if (!window.api?.usb?.onData) return
-
-    // Ensure port reader is set up in the main process
-    window.api.usb.setupPortReader?.().catch(() => {})
+    if (!window.api?.usb?.onData && !window.api?.usb?.onTelemetry) return
 
     const handler = (msg: string) => {
       setMessages(prev => [...prev, {
@@ -74,10 +71,21 @@ export default function Console() {
       }])
     }
 
-    window.api.usb.onData(handler)
+    const telemetryHandler = (telem: TelemetryData) => {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString([], { hour12: false }),
+        type: "info",
+        text: `TELEM rpm=${telem.speed.actual_rpm.toFixed(1)} target=${telem.speed.target_rpm.toFixed(1)} vbat=${telem.voltages.battery.toFixed(2)} ts=${telem.timestamp_ms}`
+      }])
+    }
+
+    const unsubscribeData = window.api.usb.onData?.(handler)
+    const unsubscribeTelemetry = window.api.usb.onTelemetry?.(telemetryHandler)
 
     return () => {
-      window.api.usb.offData?.()
+      unsubscribeData?.()
+      unsubscribeTelemetry?.()
     }
   }, [])
 
@@ -126,7 +134,7 @@ export default function Console() {
               <div className="pl-1 space-y-1">
                 {messages.map((msg) => (
                 <div key={msg.id} className="group flex items-start gap-2 hover:bg-muted/30 px-0 py-0.5 transition-colors">
-                  <span className="text-muted-foreground/50 shrink-0 select-none w-[75px]">
+                  <span className="text-muted-foreground/50 shrink-0 select-none w-18.75">
                     [{msg.timestamp}] 
                   </span>
                   <span className={cn(

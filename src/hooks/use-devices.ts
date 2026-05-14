@@ -28,7 +28,7 @@ export const useUsbDevices = () => {
       const res = await window.api.usb.refresh()
       setDevices(res)
       toast.info("Device list refreshed")
-    } catch (error) {
+    } catch {
       toast.error("Failed to refresh devices")
     } finally {
       setLoading(false)

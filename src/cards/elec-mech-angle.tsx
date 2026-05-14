@@ -1,9 +1,13 @@
 import { LineChart } from "@/components/charts/line"
 
-// Sample time-series angle data
-// Electrical angle = (Mechanical angle * PolePairs) mod 360
-const generateAngleTimeSeries = () => {
-  const data = []
+export type AnglePoint = {
+  time: string
+  mechanical: number
+  electrical: number
+}
+
+const generateFallbackAngleTimeSeries = (): AnglePoint[] => {
+  const data: AnglePoint[] = []
   const polePairs = 7
   const totalPoints = 50
   
@@ -19,9 +23,15 @@ const generateAngleTimeSeries = () => {
   return data
 }
 
-const angleTimeSeriesData = generateAngleTimeSeries()
+const fallbackAngleTimeSeriesData = generateFallbackAngleTimeSeries()
 
-export default function ElecMechAngleCard() {
+type ElecMechAngleCardProps = {
+  data?: AnglePoint[]
+}
+
+export default function ElecMechAngleCard({ data }: ElecMechAngleCardProps) {
+  const chartData = data && data.length > 0 ? data : fallbackAngleTimeSeriesData
+
   return (
     <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm">
       <div className="mb-4 space-y-1 shrink-0">
@@ -30,10 +40,10 @@ export default function ElecMechAngleCard() {
           Real-time time-series tracking of motor rotor position vs. magnetic field cycles.
         </p>
       </div>
-      <div className="flex-1 min-h-[200px] w-full animate-in fade-in duration-500">
+      <div className="flex-1 min-h-50 w-full animate-in fade-in duration-500">
         <LineChart
           className="size-full"
-          data={angleTimeSeriesData}
+          data={chartData}
           xKey="time"
           series={[
             { dataKey: 'mechanical', label: 'Mech Angle', color: 'var(--chart-1)', type: 'linear', strokeWidth: 2 },

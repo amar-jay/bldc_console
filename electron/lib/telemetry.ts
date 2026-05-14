@@ -39,3 +39,27 @@ export type BLDCTelemetry = {
 
   timestamp_ms: number
 }
+
+export type TelemetryRaw = {
+  rpm: number
+  rpm_t: number
+  i_a: number
+  i_b: number
+  i_c: number
+  v_a: number
+  v_b: number
+  v_c: number
+  i_d: number
+  i_q: number
+  ang_m: number
+  ang_e: number
+  ts: number
+  v_bat: number
+  i_bat: number
+  e_used: number
+  e_rem: number
+  bemf: number
+  obs: number
+  pll: number
+  ang_err: number
+}

@@ -4,6 +4,7 @@ import isDev from 'electron-is-dev'
 import { connectDevice, listDevices, sendDataToPort, setupPortReader } from './lib/serial'
 import { Menu } from 'electron'
 import { SerialPort } from 'serialport'
+import type { BLDCTelemetry } from './lib/telemetry'
 
 // Multi-window support
 const windows = new Set<BrowserWindow>()
@@ -52,6 +53,29 @@ let devices: any[] = []
 let connectedPort: SerialPort | null = null
 let connectedPath: string | null = null
 
+const setupConnectedPortReader = () => {
+  if (!connectedPort) {
+    throw new Error("No device connected")
+  }
+
+  if (!connectedPort.readable) {
+    throw new Error("Port is not readable")
+  }
+
+  setupPortReader(connectedPort, {
+    onMessage: (msg: string) => {
+      BrowserWindow.getAllWindows().forEach(win => {
+        win.webContents.send("usb:data", msg)
+      })
+    },
+    onTelemetry: (telem: BLDCTelemetry) => {
+      BrowserWindow.getAllWindows().forEach(win => {
+        win.webContents.send("usb:telem", telem)
+      })
+    },
+  })
+}
+
 ipcMain.handle("usb:send-data", async (_, data: string) => {
 	if (!connectedPort) throw new Error("No device connected")
 	if (!connectedPort.writable) throw new Error("Port is not writable")
@@ -60,14 +84,7 @@ ipcMain.handle("usb:send-data", async (_, data: string) => {
 })
 
 ipcMain.handle("usb:setup-port-reader", async () => {
-  if (!connectedPort) throw new Error("No device connected")
-  if (!connectedPort.readable) throw new Error("Port is not readable")
-
-  setupPortReader(connectedPort, (msg: string) => {
-    BrowserWindow.getAllWindows().forEach(win => {
-      win.webContents.send("usb:data", msg)
-    })
-  })
+  setupConnectedPortReader()
 })
 
 ipcMain.handle("usb:list", async () => {
@@ -97,6 +114,9 @@ ipcMain.handle("usb:connect", async (_, path: string) => {
 
     connectedPort = await connectDevice(path)
     connectedPath = path
+
+    // Reader setup belongs to the successful connection lifecycle.
+    setupConnectedPortReader()
 
     devices = devices.map((d) =>
       d.path === path ? { ...d, connected: true } : { ...d, connected: false }

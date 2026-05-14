@@ -1,9 +1,19 @@
 
 import { RadialChart } from "@/components/charts/radial"
-const batteryData = [
-  { name: 'Power', used: 640, remaining: 360 }
-]
-export default function BatteryCapCard() {
+
+type BatteryCapCardProps = {
+  usedWh?: number
+  remainingWh?: number
+}
+
+export default function BatteryCapCard({
+  usedWh = 640,
+  remainingWh = 360,
+}: BatteryCapCardProps) {
+	const batteryData = [
+	  { name: 'Power', used: usedWh, remaining: remainingWh }
+	]
+
 	return (
         <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm break-inside-avoid">
           <div className="mb-4 space-y-1 shrink-0">
@@ -12,12 +22,12 @@ export default function BatteryCapCard() {
               Total energy consumption and charge remaining.
             </p>
           </div>
-          <div className="flex-1 min-h-[200px] w-full relative">
+          <div className="flex-1 min-h-50 w-full relative">
             <RadialChart
               className="size-full"
               data={batteryData}
               centerLabel="Wh remaining"
-              centerValue={360}
+              centerValue={Math.round(remainingWh)}
               series={[
                 { dataKey: 'remaining', label: 'Remaining', stackId: 'a', color: 'var(--chart-2)' },
                 { dataKey: 'used', label: 'Used', stackId: 'a', color: 'var(--muted)' },

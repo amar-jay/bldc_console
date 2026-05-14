@@ -1,21 +1,32 @@
 import { LineChart } from "@/components/charts/line"
 
-// Sample DQ Frame data (Direct and Quadrature current)
-const generateDQData = () => {
-  const data = []
+export type DQFramePoint = {
+  time: string
+  id: number
+  iq: number
+}
+
+const generateFallbackDQData = (): DQFramePoint[] => {
+  const data: DQFramePoint[] = []
   for (let i = 0; i < 50; i++) {
     data.push({
-      time: `${i}ms`,
-      id: 5.0 + (Math.random() - 0.5) * 0.2, // Direct current (usually regulated to 0 or constant)
-      iq: 12.0 + (Math.random() - 0.5) * 0.5, // Quadrature current (torque producing)
+      time: `${i * 10}ms`,
+      id: 5 + Math.sin(i / 6) * 0.2,
+      iq: 12 + Math.cos(i / 7) * 0.5,
     })
   }
   return data
 }
 
-const dqData = generateDQData()
+const fallbackDQData = generateFallbackDQData()
 
-export default function DQRefFrameCard() {
+type DQRefFrameCardProps = {
+  data?: DQFramePoint[]
+}
+
+export default function DQRefFrameCard({ data }: DQRefFrameCardProps) {
+  const chartData = data && data.length > 0 ? data : fallbackDQData
+
   return (
     <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm">
       <div className="mb-4 space-y-1 shrink-0">
@@ -24,10 +35,10 @@ export default function DQRefFrameCard() {
           Real-time tracking of torque (Iq) and flux (Id) components.
         </p>
       </div>
-      <div className="flex-1 min-h-[200px] w-full animate-in fade-in duration-500">
+      <div className="flex-1 min-h-50 w-full animate-in fade-in duration-500">
         <LineChart
           className="size-full"
-          data={dqData}
+          data={chartData}
           xKey="time"
           series={[
             { dataKey: 'iq', label: 'Iq (Torque)', color: 'var(--chart-2)', type: 'monotone' },

@@ -13,7 +13,7 @@
     "dev": "npm run build:electron && concurrently \"vite\" \"npm run dev:electron\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron . --no-sandbox --ozone-platform=x11\"",
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "tsc -b && vite build && npm run build:electron",
-		"watch": "tsc -b -w",
+    "watch": "tsc -b -w",
     "lint": "eslint .",
     "preview": "vite preview",
     "build:mac": "npm run build && electron-builder --mac",
@@ -53,6 +53,8 @@
     "@base-ui/react": "^1.4.1",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/public-sans": "^5.2.7",
+    "@tailwindcss/vite": "^4.3.0",
+    "cbor": "^10.0.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -91,11 +93,11 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "postcss": "^8.5.14",
-    "vite": "^8.0.12",
-    "wait-on": "^9.0.10",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.57.1",
+    "vite": "^8.0.12",
+    "wait-on": "^9.0.10"
   }
 }

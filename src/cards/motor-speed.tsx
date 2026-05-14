@@ -1,7 +1,12 @@
 import { LineChart } from "@/components/charts/line"
 
-// demo data for motor speed over time, fetch from electron api
-const motorSpeedData = [
+export type MotorSpeedPoint = {
+  time: string
+  rpm: number
+  target: number
+}
+
+const fallbackMotorSpeedData: MotorSpeedPoint[] = [
   { time: '08:00', rpm: 1240, target: 1200 },
   { time: '08:05', rpm: 1310, target: 1250 },
   { time: '08:10', rpm: 1385, target: 1325 },
@@ -10,7 +15,13 @@ const motorSpeedData = [
   { time: '08:25', rpm: 1510, target: 1480 },
 ]
 
-export default function MotorSpeedCard() {
+type MotorSpeedCardProps = {
+  data?: MotorSpeedPoint[]
+}
+
+export default function MotorSpeedCard({ data }: MotorSpeedCardProps) {
+	const chartData = data && data.length > 0 ? data : fallbackMotorSpeedData
+
 	return (
         <div className="size-full flex flex-col rounded-xl border bg-card p-4 shadow-sm break-inside-avoid">
           <div className="mb-4 space-y-1 shrink-0">
@@ -19,10 +30,10 @@ export default function MotorSpeedCard() {
               A reusable line chart example for live telemetry and setpoint tracking.
             </p>
           </div>
-          <div className="flex-1 min-h-[240px] w-full animate-in fade-in duration-500">
+          <div className="flex-1 min-h-60 w-full animate-in fade-in duration-500">
             <LineChart
               className="size-full"
-              data={motorSpeedData}
+              data={chartData}
               xKey="time"
               series={[
                 { dataKey: 'rpm', label: 'Actual RPM' },
