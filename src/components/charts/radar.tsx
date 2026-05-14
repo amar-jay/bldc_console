@@ -14,6 +14,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+import type { TypedDataKey } from "recharts/types/util/typedDataKey"
 
 const DEFAULT_RADAR_COLORS = [
   "var(--chart-1)",
@@ -74,8 +75,8 @@ export function RadarChart<TData extends Record<string, unknown>>({
           )}
           {showPolarAngleAxis && (
             <PolarAngleAxis
-              dataKey={indexKey}
-              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} // ✅ use tick prop, not className
+              dataKey={indexKey as TypedDataKey<TData, unknown>}
+              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
             />
           )}
           {showTooltip && (
@@ -96,7 +97,7 @@ export function RadarChart<TData extends Record<string, unknown>>({
             />
           ))}
           {showLegend && (
-            <ChartLegend content={<ChartLegendContent />} /> // ✅ moved after Radar items, no className
+            <ChartLegend content={<ChartLegendContent />} />
           )}
         </RechartsRadarChart>
       </ChartContainer>

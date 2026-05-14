@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("api", {
     connect: (id: string) => ipcRenderer.invoke("usb:connect", id),
 		disconnect: (id: string) => ipcRenderer.invoke("usb:disconnect", id),
     refresh: () => ipcRenderer.invoke("usb:refresh"),
+    sendData: (data: string) => ipcRenderer.invoke("usb:send-data", data),
     onUpdate: (cb: (devices: any[]) => void) => {
       const handler = (_: any, devices: any[]) => cb(devices)
 
@@ -25,5 +26,12 @@ contextBridge.exposeInMainWorld("api", {
         ipcRenderer.removeListener("usb:update", handler)
       }
     },
+	  setupPortReader: () => ipcRenderer.invoke("usb:setup-port-reader"),
+	  onData: (callback: (msg: string) => void) => {
+	    ipcRenderer.on("usb:data", (_, msg) => callback(msg))
+	  },
+	  offData: () => {
+	    ipcRenderer.removeAllListeners("usb:data")
+	  }
   },
 })

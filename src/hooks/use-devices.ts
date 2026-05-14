@@ -38,7 +38,7 @@ export const useUsbDevices = () => {
   const onDisconnect = useCallback(async (path: string) => {
     setLoading(true)
     try {
-      const updated = await window.api.usb.disconnect(path)
+      await window.api.usb.disconnect(path)
       
       // Force update the local state with the returned devices
       const freshDevices = await window.api.usb.list()

@@ -16,6 +16,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+import type { TypedDataKey } from "recharts/types/util/typedDataKey"
 
 const DEFAULT_BAR_COLORS = [
   "var(--chart-1)",
@@ -108,7 +109,7 @@ export function BarChart<TData extends Record<string, unknown>>({
           />
         )}
         <XAxis
-          dataKey={layout === "horizontal" ? xKey : undefined}
+          dataKey={layout === "horizontal" ? xKey as TypedDataKey<TData, unknown> : undefined}
           type={layout === "horizontal" ? "category" : "number"}
           tickLine={false}
           axisLine={false}
@@ -118,7 +119,7 @@ export function BarChart<TData extends Record<string, unknown>>({
           hide={layout === "vertical"}
         />
         <YAxis
-          dataKey={layout === "vertical" ? xKey : undefined}
+          dataKey={layout === "vertical" ? xKey as TypedDataKey<TData, unknown>: undefined}
           type={layout === "vertical" ? "category" : "number"}
           width={yAxisWidth}
           tickLine={false}
@@ -146,7 +147,7 @@ export function BarChart<TData extends Record<string, unknown>>({
             fill={`var(--color-${item.dataKey})`}
             radius={item.radius ?? [4, 4, 0, 0]}
             stackId={item.stackId}
-            layout={layout}
+            // layout={layout}
           />
         ))}
       </RechartsBarChart>

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import TopBar from '@/components/top-bar'
 import MotorSpeedCard from '@/cards/motor-speed'

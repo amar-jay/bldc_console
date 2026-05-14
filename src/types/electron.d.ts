@@ -12,9 +12,14 @@ declare global {
       }
       usb: {
         list: () => Promise<Device[]>
+				disconnect: (id: string) => Promise<void>
         connect: (id: string) => Promise<Device>
         refresh: () => Promise<Device[]>
         onUpdate: (cb: (devices: Device[]) => void) => () => void 
+        sendData?: (data: string) => Promise<unknown>
+        setupPortReader?: () => Promise<unknown>
+        onData?: (cb: (msg: string) => void) => void
+        offData?: () => void
       }
     }
   }

@@ -1,8 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import isDev from 'electron-is-dev'
-import { connectDevice, listDevices } from './lib/serial'
+import { connectDevice, listDevices, sendDataToPort, setupPortReader } from './lib/serial'
 import { Menu } from 'electron'
+import { SerialPort } from 'serialport'
 
 // Multi-window support
 const windows = new Set<BrowserWindow>()
@@ -46,9 +47,28 @@ export function createWindow(urlPath: string = '') {
 
 // ---- usb related IPC handlers (example) ----
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let devices: any[] = []
-let connectedPort: any = null
+let connectedPort: SerialPort | null = null
 let connectedPath: string | null = null
+
+ipcMain.handle("usb:send-data", async (_, data: string) => {
+	if (!connectedPort) throw new Error("No device connected")
+	if (!connectedPort.writable) throw new Error("Port is not writable")
+
+	return sendDataToPort(connectedPort, data)
+})
+
+ipcMain.handle("usb:setup-port-reader", async () => {
+  if (!connectedPort) throw new Error("No device connected")
+  if (!connectedPort.readable) throw new Error("Port is not readable")
+
+  setupPortReader(connectedPort, (msg: string) => {
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send("usb:data", msg)
+    })
+  })
+})
 
 ipcMain.handle("usb:list", async () => {
   const freshDevices = await listDevices()
@@ -63,10 +83,10 @@ ipcMain.handle("usb:connect", async (_, path: string) => {
   try {
     if (connectedPath === path) return devices.find((d) => d.path === path)
 
-    if (connectedPort) {
+    if (connectedPort && connectedPath) {
       // close current connection before opening new one
       await new Promise<void>((resolve, reject) => {
-        connectedPort.close((err: any) => {
+        connectedPort?.close((err: unknown) => {
           if (err) reject(err)
           else resolve()
         })
@@ -108,7 +128,7 @@ ipcMain.handle("usb:disconnect", async (_, path: string) => {
     if (connectedPort && connectedPath === path) {
       // Assuming SerialPort instance has a close method
       await new Promise<void>((resolve, reject) => {
-        connectedPort.close((err: any) => {
+        connectedPort?.close((err: unknown) => {
           if (err) reject(err)
           else resolve()
         })

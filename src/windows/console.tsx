@@ -3,7 +3,6 @@ import { Terminal as TerminalIcon, Trash2, Download, Play, Square } from "lucide
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import TopBar from "@/components/top-bar"
 
@@ -15,9 +14,8 @@ interface ConsoleMessage {
 }
 
 export default function Console() {
-  const [messages, setMessages] = React.useState<ConsoleMessage[]>([
-    { id: "1", timestamp: "12:00:01", type: "info", text: "Serial system initialized." },
-    { id: "2", timestamp: "12:00:02", type: "in", text: "VOUT: 12.4V, TEMP: 34C" },
+  const [messages, setMessages] = React.useState<ConsoleMessage[]>([ //demo
+    // start empty; real data will arrive from IPC
   ])
   const [inputValue, setInputValue] = React.useState("")
   const [isPaused, setIsPaused] = React.useState(false)
@@ -46,17 +44,42 @@ export default function Console() {
 
     setMessages(prev => [...prev, newMessage])
     setInputValue("")
-    
-    // Simulate echo for demo
-    setTimeout(() => {
+    // send over IPC to the main process; incoming responses will be delivered
+    // via the `usb:data` channel and appended by the onData handler below
+    if (window.api?.usb?.sendData) {
+      window.api.usb.sendData(inputValue).catch((err) => {
         setMessages(prev => [...prev, {
-            id: (Date.now()+1).toString(),
-            timestamp: new Date().toLocaleTimeString([], { hour12: false }),
-            type: "in",
-            text: `ACK: ${inputValue}`
+          id: (Date.now()+2).toString(),
+          timestamp: new Date().toLocaleTimeString([], { hour12: false }),
+          type: "error",
+          text: String(err?.message ?? err)
         }])
-    }, 100)
+      })
+    }
   }
+
+  // Subscribe to incoming serial data from the main process
+  React.useEffect(() => {
+    if (!window.api?.usb?.onData) return
+
+    // Ensure port reader is set up in the main process
+    window.api.usb.setupPortReader?.().catch(() => {})
+
+    const handler = (msg: string) => {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString([], { hour12: false }),
+        type: "in",
+        text: msg
+      }])
+    }
+
+    window.api.usb.onData(handler)
+
+    return () => {
+      window.api.usb.offData?.()
+    }
+  }, [])
 
   const clearConsole = () => setMessages([])
 
