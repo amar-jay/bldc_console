@@ -104,10 +104,11 @@ export default function TopBar() {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>New Device</DropdownMenuItem>
+            {/* <DropdownMenuItem>New Device</DropdownMenuItem> */}
             <DropdownMenuItem>Import Config</DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>About</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

@@ -5,6 +5,9 @@ import { contextBridge, ipcRenderer } from 'electron'
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld("api", {
   openNewWindow: (path: string) => ipcRenderer.send('open-new-window', path),
+	file: {
+		saveFile: (data: ArrayBuffer, filePath: string): Promise<void> => ipcRenderer.invoke('file:save-file', data, filePath),
+	},
   window: {
     close: () => ipcRenderer.send('window:close'),
     maximize: () => ipcRenderer.send('window:maximize'),

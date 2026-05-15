@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import TopBar from "@/components/top-bar"
+import { toast } from "sonner"
 
 interface ConsoleMessage {
   id: string
@@ -20,6 +21,9 @@ export default function Console() {
   const [inputValue, setInputValue] = React.useState("")
   const [isPaused, setIsPaused] = React.useState(false)
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  const unsubscribeDataRef = React.useRef<(() => void) | null>(null)
+  const unsubscribeTelemetryRef = React.useRef<(() => void) | null>(null)
+
 
   // Auto-scroll logic
   React.useEffect(() => {
@@ -58,7 +62,9 @@ export default function Console() {
     }
   }
 
-  // Subscribe to incoming serial data + telemetry from the main process
+  // Subscribe to incoming serial data + telemetry from the main process.
+  // Subscriptions are managed via refs so we can unsubscribe while paused
+  // to avoid queuing messages and leaking handlers.
   React.useEffect(() => {
     if (!window.api?.usb?.onData && !window.api?.usb?.onTelemetry) return
 
@@ -80,16 +86,49 @@ export default function Console() {
       }])
     }
 
-    const unsubscribeData = window.api.usb.onData?.(handler)
-    const unsubscribeTelemetry = window.api.usb.onTelemetry?.(telemetryHandler)
+    const subscribe = () => {
+      unsubscribeDataRef.current?.()
+      unsubscribeTelemetryRef.current?.()
+      unsubscribeDataRef.current = window.api.usb.onData?.(handler) ?? null
+      unsubscribeTelemetryRef.current = window.api.usb.onTelemetry?.(telemetryHandler) ?? null
+    }
+
+    const unsubscribe = () => {
+      unsubscribeDataRef.current?.()
+      unsubscribeTelemetryRef.current?.()
+      unsubscribeDataRef.current = null
+      unsubscribeTelemetryRef.current = null
+    }
+
+    if (!isPaused) {
+      subscribe()
+    } else {
+      unsubscribe()
+    }
 
     return () => {
-      unsubscribeData?.()
-      unsubscribeTelemetry?.()
+      unsubscribe()
     }
-  }, [])
+  }, [isPaused])
 
-  const clearConsole = () => setMessages([])
+  const onPauseToggle = () => {
+    setIsPaused(i => !i)
+  }
+
+  const onDownload = async () => {
+		if (messages.length === 0) return
+    const logContent = messages.map(msg => `[${msg.timestamp}] ${msg.text}`).join("\n")
+    const blob = new Blob([logContent], { type: "text/plain" })
+    const safeTs = new Date().toISOString().replace(/[:.]/g, "-")
+    const filename = `logs_${safeTs}.txt`
+    const arrayBuffer = await blob.arrayBuffer()
+    await window.api.file.saveFile(arrayBuffer, filename).then(() => {
+			toast.success("Logs saved", { duration: 5000 });
+		}).catch(() => {
+			toast.error("Failed to save logs")
+		})
+  }
+  const onClear = () => setMessages([])
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -114,15 +153,15 @@ export default function Console() {
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8" 
-                onClick={() => setIsPaused(!isPaused)}
+                onClick={onPauseToggle}
                 title={isPaused ? "Resume scrolling" : "Pause scrolling"}
               >
                 {isPaused ? <Play className="h-4 w-4" /> : <Square className="h-4 w-4" />}
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={clearConsole} title="Clear console">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClear} title="Clear console" disabled={messages.length === 0}>
                 <Trash2 className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="Download log">
+              <Button variant="ghost" size="icon" className="h-8 w-8" title="Download log" onClick={onDownload} disabled={messages.length === 0}>
                 <Download className="h-4 w-4" />
               </Button>
             </div>

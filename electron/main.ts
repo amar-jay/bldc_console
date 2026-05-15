@@ -5,6 +5,7 @@ import { connectDevice, listDevices, sendDataToPort, setupPortReader } from './l
 import { Menu } from 'electron'
 import { SerialPort } from 'serialport'
 import type { BLDCTelemetry } from './lib/telemetry'
+import { saveFile } from './lib/file'
 
 // Multi-window support
 const windows = new Set<BrowserWindow>()
@@ -75,6 +76,12 @@ const setupConnectedPortReader = () => {
     },
   })
 }
+
+ipcMain.handle("file:save-file", async (_, data: ArrayBuffer, filePath: string) => {
+	if (!filePath) throw new Error("File path is required")
+	if (!data) throw new Error("No data provided to save")
+	return saveFile(data, filePath) 
+})
 
 ipcMain.handle("usb:send-data", async (_, data: string) => {
 	if (!connectedPort) throw new Error("No device connected")

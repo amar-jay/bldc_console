@@ -4,6 +4,9 @@ declare global {
   interface Window {
     api: {
       openNewWindow: (path: string) => void
+			file: {
+				saveFile: (data: ArrayBuffer, filePath: string) => Promise<void>
+			},
       window: {
         close: () => void
         maximize: () => void

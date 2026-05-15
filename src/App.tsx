@@ -31,7 +31,7 @@ function App() {
         <Route path="/card/elec-mech" element={<SubWindowLayout title="Angles"><ElecMechAngleCard/></SubWindowLayout>} />
         <Route path="/card/dq-frame" element={<SubWindowLayout title="DQ Reference Frame"><DQRefFrameCard/></SubWindowLayout>} />
       </Routes>
-      <Toaster />
+      <Toaster duration={1000} />
     </>
   )
 }
