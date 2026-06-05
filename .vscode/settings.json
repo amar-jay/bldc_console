@@ -1,0 +1,4 @@
+{
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/firmware/build/Debug/compile_commands.json",
+    "C_Cpp.intelliSenseEngine": "default"
+}

@@ -1,0 +1,6 @@
+[submodule "firmware/Middlewares/Third_Party/DSDL"]
+	path = firmware/Middlewares/Third_Party/DSDL
+	url = https://github.com/dronecan/DSDL
+[submodule "firmware/Middlewares/Third_Party/dronecan_dsdlc"]
+	path = firmware/Middlewares/Third_Party/dronecan_dsdlc
+	url = https://github.com/DroneCAN/dronecan_dsdlc
