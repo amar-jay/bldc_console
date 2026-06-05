@@ -1,4 +1,5 @@
 {
     "C_Cpp.default.compileCommands": "${workspaceFolder}/firmware/build/Debug/compile_commands.json",
-    "C_Cpp.intelliSenseEngine": "default"
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "cmake.sourceDirectory": "/home/manan/Desktop/code/bldc/firmware"
 }
