@@ -1,13 +1,11 @@
-#include "bldc.h"
-#include "cmsis_os.h"
-#include "main.h"
-#include "usb_device.h"
-#include "usbd_cdc.h"
-#include "nanocbor/nanocbor.h"
-#include <stdio.h>
 #include <math.h>
 #include <stdint.h>
-
+#include <string.h>
+#include "cmsis_os2.h"
+#include "main.h"
+#include "bldc.h"
+#include "stm32f4xx_hal.h"
+#include "usb_device.h"
 
 extern osMessageQueueId_t usbQueueHandle;
 
@@ -79,21 +77,28 @@ void gen_demo_telemetry(void)
     telem_data.timestamp_ms = millis32();
 }
 
+void bldc_telem_init(void) {
+	// Initialize telemetry data with demo values
+  MX_USB_DEVICE_Init();
+}
+
+static usb_msg_t msg;
+void bldc_telem_pub(void) {
+		gen_demo_telemetry();
+		msg.type = USB_MSG_TELEMETRY;
+		memcpy(&msg.data.telemetry, &telem_data, sizeof(bldc_telemetry_t));
+
+		// Send to USB queue
+		if (usbQueueHandle != NULL) 
+				osMessageQueuePut(usbQueueHandle, &msg, 0, 10);
+}
 
 void TelemThread(void *argument) {
-		usb_msg_t msg;
-
-		while (1) {
-				gen_demo_telemetry();
-				msg.type = USB_MSG_TELEMETRY;
-				memcpy(&msg.data.telemetry, &telem_data, sizeof(bldc_telemetry_t));
-
-				// Send to USB queue
-				if (usbQueueHandle != NULL) {
-						osMessageQueuePut(usbQueueHandle, &msg, 0, 10);
-				}
-
-				osDelay(100); // 100ms delay for 10Hz update rate
+		for (;;) {
+				bldc_telem_pub();
+				osDelay(10); // 100ms delay for 10Hz update rate
+				bldc_dronecan_pub();
+				osDelay(90); // 100ms delay for 10Hz update rate
 		}
 
 }

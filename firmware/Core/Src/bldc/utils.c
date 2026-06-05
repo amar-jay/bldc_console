@@ -1,5 +1,4 @@
 #include "main.h"
-#include "stm32f4xx_hal.h"
 
 void dwt_init(void)
 {
@@ -23,9 +22,14 @@ uint64_t stm32_cycles64(void)
     return high | now;
 }
 
+// perhaps in the future we may explore the option of using 32-bit timer + overflow accumulation 
+// for getting microsecond timestamps, but for now DWT cycle counter with 64-bit accumulation is 
+// simpler to implement and has no risk of overflow in the long term (hundreds of years at 72 MHz)
 uint64_t micros64(void)
 {
-    return stm32_cycles64() / (SystemCoreClock / 1000000ULL);
+    // Use HAL_RCC_GetHCLKFreq() to get the actual current hardware clock frequency.
+    // This is safer than SystemCoreClock if the PLL has changed without updating the global variable.
+    return stm32_cycles64() / (HAL_RCC_GetHCLKFreq() / 1000000ULL);
 }
 
 uint32_t millis32(void)

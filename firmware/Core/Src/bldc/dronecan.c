@@ -1,8 +1,7 @@
-#include "dronecan.h"
 #include "main.h"
 #include <string.h>
 #include <stdio.h>
-// 
+
 #include "uavcan.equipment.esc.RawCommand.h"
 #include "uavcan.equipment.esc.Status.h"
 #include "uavcan.protocol.NodeStatus.h"
@@ -192,7 +191,7 @@ static bool should_accept_transfer(const CanardInstance* ins,
     return false;
 }
 
-void dronecan_init(void) {
+void bldc_dronecan_init(void) {
     canardInit(&canard,
                canard_memory_pool,
                sizeof(canard_memory_pool),
@@ -202,7 +201,7 @@ void dronecan_init(void) {
     canardSetLocalNodeID(&canard, 42); // Configurable via parameters or dynamic node ID allocation in the future
 }
 
-void dronecan_publish_esc_status(void) {
+static inline void bldc_dronecan_pub_esc_status(void) {
     struct uavcan_equipment_esc_Status msg;
     memset(&msg, 0, sizeof(msg));
     
@@ -231,7 +230,7 @@ void dronecan_publish_esc_status(void) {
 }
 
 
-void dronecan_publish_node_status(void) {
+static inline void bldc_dronecan_pub_node_status(void) {
 	    uint8_t buffer[UAVCAN_PROTOCOL_NODESTATUS_MAX_SIZE];
 
     node_status.uptime_sec = micros64() / 1000000ULL;
@@ -266,7 +265,24 @@ void dronecan_publish_node_status(void) {
                     (uint16_t)len);
 }
 
-void dronecan_update(void) {
+static uint32_t last_1hz = 0;
+static uint32_t last_10hz = 0;
+void bldc_dronecan_pub(void){
+    bldc_dronecan_update();
+    uint32_t now = HAL_GetTick();
+    if (now - last_1hz >= 1000) {
+      last_1hz = now;
+      bldc_dronecan_pub_node_status();
+    }
+    
+    if (now - last_10hz >= 100) {
+      last_10hz = now;
+      bldc_dronecan_pub_esc_status();
+    }
+}
+
+
+void bldc_dronecan_update(void) {
     // 1. Hardware CAN RX
     // Check if new CAN frames are available in your hardware driver / HAL buffer.
     // If a frame is available, convert it to a CanardCANFrame and call:

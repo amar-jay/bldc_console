@@ -1,73 +1,66 @@
 #ifndef __BLDC_H
 #define __BLDC_H
 
+#include <stdint.h>
+#include "stm32f4xx_hal.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
+/* -------------------------------------------------------------------------- */
+/* Phase output mappings for TIM3                                                  */
+/* -------------------------------------------------------------------------- */
+#define PHASE_1_CH TIM_CHANNEL_1
+#define CH1E       TIM_CCER_CC1E
+#define CH1NE      TIM_CCER_CC1NE
+
+#define PHASE_2_CH TIM_CHANNEL_2
+#define CH2E       TIM_CCER_CC2E
+#define CH2NE      TIM_CCER_CC2NE
+
+#define PHASE_3_CH TIM_CHANNEL_3
+#define CH3E       TIM_CCER_CC3E
+#define CH3NE      TIM_CCER_CC3NE
+
+/* -------------------------------------------------------------------------- */
+/* Type definitions                                                             */
+/* -------------------------------------------------------------------------- */
+
+typedef enum {
+    PHASE_FLOAT = 0,
+    PHASE_PWM_HIGH,
+    PHASE_PWM_LOW
+} PhaseState;
 
 /**
- * @brief BLDC Telemetry data structure for real-time FOC diagnostics.
+ * @brief BLDC hardware handle used by the low-level motor driver.
  */
 typedef struct {
-    // Motor Speed 
-    float rpm_actual;
-    float rpm_target;
-
-    // Phase Currents 
-    float current_phase_a; // Amps
-    float current_phase_b; // Amps
-    float current_phase_c; // Amps
-
-    // Phase Voltages 
-    float voltage_phase_a; // Volts
-    float voltage_phase_b; // Volts
-    float voltage_phase_c; // Volts
-
-    // FOC DQ Reference Frame 
-    float i_d; // Direct current (Flux)
-    float i_q; // Quadrature current (Torque)
-
-    // Position & Timing 
-    float angle_mechanical;  // 0-360 degrees
-    float angle_electrical;  // 0-360 degrees
-    uint64_t timestamp_ms;   // For time-series synchronization, realistic unix time in ms
-
-    // Battery & Power 
-    float battery_voltage;   // Bus voltage
-    float battery_current;   // Total current draw
-    float energy_used_wh;    // Progress tracking
-    float energy_rem_wh;     // Capacity calculation
-
-    // Observer/FOC Characteristics
-    // Scaled 0-100 or raw values for radar comparison
-    uint8_t bemf_strength;
-    uint8_t obs_confidence;
-    uint8_t pll_lock_status;
-    uint8_t angle_error_deg;
-
-} bldc_telemetry_t;
-
+    TIM_HandleTypeDef *htim;
+    uint32_t chA;
+    uint32_t chB;
+    uint32_t chC;
+} BLDC_Handle_t;
 
 /**
  * @brief BLDC Settings structure for real-time FOC control parameters.
  */
 typedef struct {
-    // Motor identity
+    /* Motor identity */
     float pole_pairs;
     float motor_kv;
     float phase_resistance;
     float phase_inductance;
 
-    // FOC control
+    /* FOC control */
     float current_kp;
     float current_ki;
     float speed_kp;
     float speed_ki;
     float i_d_target;
 
-    // Sensorless observer
+    /* Sensorless observer */
     float pll_kp;
     float pll_ki;
     float bemf_filter_cutoff_hz;
@@ -75,12 +68,12 @@ typedef struct {
     float min_rpm_closed_loop;
     float max_rpm_open_loop;
 
-    // Startup behavior
+    /* Startup behavior */
     float startup_ramp_time_ms;
     float alignment_current;
     uint8_t startup_mode;
 
-    // Limits & protection
+    /* Limits & protection */
     float max_phase_current;
     float max_bus_voltage;
     float max_temperature;
@@ -88,7 +81,47 @@ typedef struct {
 } bldc_settings_t;
 
 /**
- * @brief USB Message types for the unified USB queue
+ * @brief BLDC Telemetry data structure for real-time FOC diagnostics.
+ */
+typedef struct {
+    /* Motor speed */
+    float rpm_actual;
+    float rpm_target;
+
+    /* Phase currents (Amps) */
+    float current_phase_a;
+    float current_phase_b;
+    float current_phase_c;
+
+    /* Phase voltages (Volts) */
+    float voltage_phase_a;
+    float voltage_phase_b;
+    float voltage_phase_c;
+
+    /* FOC DQ reference frame */
+    float i_d;
+    float i_q;
+
+    /* Position and timing */
+    float angle_mechanical;
+    float angle_electrical;
+    uint64_t timestamp_ms;
+
+    /* Battery and power */
+    float battery_voltage;
+    float battery_current;
+    float energy_used_wh;
+    float energy_rem_wh;
+
+    /* Observer/FOC characteristics */
+    uint8_t bemf_strength;
+    uint8_t obs_confidence;
+    uint8_t pll_lock_status;
+    uint8_t angle_error_deg;
+} bldc_telemetry_t;
+
+/**
+ * @brief USB message types for the unified USB queue.
  */
 typedef enum {
     USB_MSG_TELEMETRY,
@@ -98,7 +131,7 @@ typedef enum {
 } usb_msg_type_t;
 
 /**
- * @brief Unified USB message structure
+ * @brief Unified USB message structure.
  */
 typedef struct {
     usb_msg_type_t type;
@@ -110,8 +143,26 @@ typedef struct {
     } data;
 } usb_msg_t;
 
+/* -------------------------------------------------------------------------- */
+/* Public API                                                                   */
+/* -------------------------------------------------------------------------- */
+
+void bldc_comm_init(BLDC_Handle_t *motor);
+void bldc_comm_set_duty(BLDC_Handle_t *motor, uint16_t duty);
+void bldc_comm_commutate(BLDC_Handle_t *motor, uint8_t step);
+void bldc_comm_enable(BLDC_Handle_t *motor);
+void bldc_comm_disable(BLDC_Handle_t *motor);
+
+void bldc_dronecan_init(void);
+void bldc_dronecan_update(void);
+void bldc_dronecan_pub(void);
+
+void bldc_telem_init(void);
+void bldc_telem_pub(void);
+
 void TelemThread(void *argument);
 void UsbThread(void *argument);
+
 #ifdef __cplusplus
 }
 #endif
