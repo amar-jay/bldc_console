@@ -1,39 +1,38 @@
 #include "bldc.h"
 
-extern TIM_HandleTypeDef htim3;
-
 static BLDC_Handle_t bldc_h;
 
 void bldc_comm_init(BLDC_Handle_t *motor){
 	bldc_h = *motor;
-	bldc_comm_enable(&bldc_h);
+	bldc_comm_enable();
 }
 
-void bldc_comm_enable(BLDC_Handle_t *m)
+void bldc_comm_enable(void)
 {
-    __HAL_TIM_MOE_ENABLE(m->htim);   // Main output enable (TIM1/TIM8)
+    __HAL_TIM_MOE_ENABLE(bldc_h.htim);   // Main output enable (TIM1/TIM8)
 }
 
-void bldc_comm_disable(BLDC_Handle_t *m)
+void bldc_comm_disable(void)
 {
     // Stop all PWM channels
-    HAL_TIM_PWM_Stop(m->htim, PHASE_1_CH);
-    HAL_TIM_PWM_Stop(m->htim, PHASE_2_CH);
-    HAL_TIM_PWM_Stop(m->htim, PHASE_3_CH);
+    HAL_TIM_PWM_Stop(bldc_h.htim, PHASE_1_CH);
+    HAL_TIM_PWM_Stop(bldc_h.htim, PHASE_2_CH);
+    HAL_TIM_PWM_Stop(bldc_h.htim, PHASE_3_CH);
 
     // Ensure duty cycles are zeroed
-    __HAL_TIM_SET_COMPARE(m->htim, PHASE_1_CH, 0);
-    __HAL_TIM_SET_COMPARE(m->htim, PHASE_2_CH, 0);
-    __HAL_TIM_SET_COMPARE(m->htim, PHASE_3_CH, 0);
+    __HAL_TIM_SET_COMPARE(bldc_h.htim, PHASE_1_CH, 0);
+    __HAL_TIM_SET_COMPARE(bldc_h.htim, PHASE_2_CH, 0);
+    __HAL_TIM_SET_COMPARE(bldc_h.htim, PHASE_3_CH, 0);
 
     // Force all outputs off
-    __HAL_TIM_MOE_DISABLE(m->htim);
-    m->htim->Instance->CCER &= ~(CH1E | CH1NE |
+    __HAL_TIM_MOE_DISABLE(bldc_h.htim);
+    bldc_h.htim->Instance->CCER &= ~(CH1E | CH1NE |
                                  CH2E | CH2NE |
                                  CH3E | CH3NE);
 }
 
-// set phases with complementary outputs.
+// Set phases depending on hardware driver topology
+#ifdef BLDC_COMPLEMENTARY_DRIVE
 static void set_phase(TIM_TypeDef *TIMx,
                       uint32_t chE,
                       uint32_t chNE,
@@ -60,17 +59,45 @@ static void set_phase(TIM_TypeDef *TIMx,
             break;
     }
 }
-
-void bldc_comm_set_duty(BLDC_Handle_t *m, uint16_t duty)
+#else
+static void set_phase(TIM_TypeDef *TIMx,
+                      uint32_t chE,
+                      uint32_t chNE /* unused here, kept for macro compatibility */,
+                      PhaseState state)
 {
-    __HAL_TIM_SET_COMPARE(m->htim, m->chA, duty);
-    __HAL_TIM_SET_COMPARE(m->htim, m->chB, duty);
-    __HAL_TIM_SET_COMPARE(m->htim, m->chC, duty);
+    // Implementation for non-complementary outputs (e.g. IN/EN driver)
+    switch (state)
+    {
+        case PHASE_PWM_HIGH:
+            // Enable PWM output
+            TIMx->CCER |= chE;
+            break;
+
+        case PHASE_PWM_LOW:
+            // For simple single-channel drives, we may disable PWM to pull low 
+            // (assuming external pull-down or driver logic handles the low side)
+            TIMx->CCER &= ~chE;
+            break;
+
+        case PHASE_FLOAT:
+        default:
+            // Disable output (float)
+            TIMx->CCER &= ~chE;
+            break;
+    }
+}
+#endif
+
+void bldc_comm_set_duty(uint16_t duty)
+{
+    __HAL_TIM_SET_COMPARE(bldc_h.htim, bldc_h.chA, duty);
+    __HAL_TIM_SET_COMPARE(bldc_h.htim, bldc_h.chB, duty);
+    __HAL_TIM_SET_COMPARE(bldc_h.htim, bldc_h.chC, duty);
 }
 
-void bldc_comm_commutate(BLDC_Handle_t *m, uint8_t step)
+void bldc_comm_commutate(uint8_t step)
 {
-    TIM_TypeDef *t = m->htim->Instance;
+    TIM_TypeDef *t = bldc_h.htim->Instance;
 
     switch (step)
     {
@@ -117,7 +144,7 @@ void bldc_comm_commutate(BLDC_Handle_t *m, uint8_t step)
             break;
 
         default:
-            bldc_comm_disable(m);
+            bldc_comm_disable();
             break;
     }
 }

@@ -11,6 +11,8 @@ extern osMessageQueueId_t usbQueueHandle;
 
 static bldc_telemetry_t telem_data;
 
+static bldc_settings_t settings_data;
+
 void gen_demo_telemetry(void)
 {
     static float t = 0.0f;
@@ -91,6 +93,11 @@ void bldc_telem_pub(void) {
 		// Send to USB queue
 		if (usbQueueHandle != NULL) 
 				osMessageQueuePut(usbQueueHandle, &msg, 0, 10);
+}
+
+// Global exposed getter for the settings structure for updates
+bldc_settings_t* bldc_get_settings(void) {
+    return &settings_data;
 }
 
 void TelemThread(void *argument) {

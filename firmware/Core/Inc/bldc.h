@@ -9,6 +9,12 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------------- */
+/* Hardware Configuration                                                       */
+/* -------------------------------------------------------------------------- */
+// Uncomment this if using advanced timers with complementary outputs (e.g., TIM1, TIM8)
+// #define BLDC_COMPLEMENTARY_DRIVE
+
+/* -------------------------------------------------------------------------- */
 /* Phase output mappings for TIM3                                                  */
 /* -------------------------------------------------------------------------- */
 #define PHASE_1_CH TIM_CHANNEL_1
@@ -148,10 +154,10 @@ typedef struct {
 /* -------------------------------------------------------------------------- */
 
 void bldc_comm_init(BLDC_Handle_t *motor);
-void bldc_comm_set_duty(BLDC_Handle_t *motor, uint16_t duty);
-void bldc_comm_commutate(BLDC_Handle_t *motor, uint8_t step);
-void bldc_comm_enable(BLDC_Handle_t *motor);
-void bldc_comm_disable(BLDC_Handle_t *motor);
+void bldc_comm_set_duty(uint16_t duty);
+void bldc_comm_commutate(uint8_t step);
+void bldc_comm_enable(void);
+void bldc_comm_disable(void);
 
 void bldc_dronecan_init(void);
 void bldc_dronecan_update(void);
@@ -159,6 +165,10 @@ void bldc_dronecan_pub(void);
 
 void bldc_telem_init(void);
 void bldc_telem_pub(void);
+bldc_settings_t* bldc_get_settings(void);
+
+void usb_msg_tx(usb_msg_t* msg, uint8_t* buf, uint16_t buf_size);
+void usb_msg_rx(uint8_t *Buf, uint32_t *Len);
 
 void TelemThread(void *argument);
 void UsbThread(void *argument);

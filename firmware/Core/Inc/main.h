@@ -76,6 +76,8 @@ uint32_t rand32(void);
 #else
 #define HAS_HW_RNG 0
 #endif
+
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
