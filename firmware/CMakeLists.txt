@@ -52,7 +52,7 @@ file(GLOB CORE_SOURCES CONFIGURE_DEPENDS
 )
 
 set(core_compile_options
-    -O2
+    -O3
     -Wall
     -Wextra
     # -Wpedantic

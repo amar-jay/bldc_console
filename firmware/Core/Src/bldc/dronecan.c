@@ -33,8 +33,9 @@ static void handle_RawCommand(CanardInstance* ins, CanardRxTransfer* transfer) {
         // Map to BLDC control
         if (msg.cmd.len > 0) {
             // Take the command for motor index 0 (assuming we are motor 0)
-            int32_t motor_cmd = msg.cmd.data[0]; 
-            
+            int32_t motor_cmd = msg.cmd.data[0];
+            (void)motor_cmd; 
+
             // TODO: Apply the received motor_cmd to the actual ESC control logic
             // bldc_set_duty_cycle(motor_cmd);
         }

@@ -41,15 +41,27 @@ extern "C" {
 #define CH3NE      TIM_CCER_CC3NE
 
 
+#define DRV8323R_CS_GPIO_Port	 		SPI1_CS_GPIO_Port
+#define DRV8323R_CS_Pin 					SPI1_CS_Pin
+#define DRV8323R_EN_GPIO_Port 		SPI1_EN_GPIO_Port
+#define DRV8323R_EN_Pin 					SPI1_EN_Pin
+#define DRV8323R_FAULT_GPIO_Port	SPI1_FAULT_GPIO_Port
+#define DRV8323R_FAULT_Pin 				SPI1_FAULT_Pin
+
 #define ADC_TO_VOLT(x)            (((float)(x) / ADC_MAX_COUNT) * ADC_REF_VOLT)
 #define ADC_TO_CURR(x)         		(ADC_TO_VOLT(x) - PHASE_CURRENT_ZERO_V) / PHASE_CURRENT_V_PER_A
 
 #define IIR_FILTER_ALPHA 0.1f
 #define IIR_FILTER(prev, curr) prev = ((IIR_FILTER_ALPHA * (curr)) + ((1.0f - IIR_FILTER_ALPHA) * (prev)))
 
+#ifndef MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
-#define CLAMP(x, min_val, max_val) (MIN(MAX((x), (min_val)), (max_val)))
+#endif
+/* CLAMP assigns the clamped value back into x (used as a statement) */
+#define CLAMP(x, min_val, max_val) ((x) = MIN(MAX((x), (min_val)), (max_val)))
 /* -------------------------------------------------------------------------- */
 /* Type definitions                                                             */
 /* -------------------------------------------------------------------------- */
@@ -189,6 +201,18 @@ void bldc_dronecan_init(void);
 void bldc_dronecan_update(void);
 void bldc_dronecan_pub(void);
 
+void 		 bldc_drv8323r_init(void);
+uint16_t bldc_drv8323r_read_reg(uint8_t reg);
+void 		 bldc_drv8323r_write_reg(uint8_t reg, uint16_t data);
+uint32_t bldc_drv8323r_read_faults(void);
+void 		 bldc_drv8323r_reset_faults(void);
+void 		 bldc_drv8323r_set_oc_adj(int val);
+void 		 bldc_drv8323r_set_oc_mode(int mode);
+void 		 bldc_drv8323r_set_current_amp_gain(int gain);
+void 		 bldc_drv8323r_dccal_on(void);
+void 		 bldc_drv8323r_dccal_off(void);
+char* 	 bldc_drv8323r_faults_to_string(uint32_t faults);
+
 void bldc_telem_init(void);
 void bldc_telem_pub(void);
 bldc_settings_t* bldc_get_settings(void);
@@ -200,6 +224,10 @@ void usb_msg_rx(uint8_t *Buf, uint32_t *Len);
 #ifdef BLDC_TELEM_USE_DEMO
 void gen_demo_telemetry(bldc_telemetry_t* telem_data);
 #endif
+
+
+
+extern BLDC_Handle_t bldc_h;
 
 #ifdef __cplusplus
 }
