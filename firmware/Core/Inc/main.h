@@ -74,6 +74,12 @@ uint32_t rand32(void);
 #define ADC_V_Sense_GPIO_Port GPIOA
 #define ADC_Temp_Pin GPIO_PIN_4
 #define ADC_Temp_GPIO_Port GPIOA
+#define SPI1_CS_Pin GPIO_PIN_2
+#define SPI1_CS_GPIO_Port GPIOB
+#define SPI1_EN_Pin GPIO_PIN_6
+#define SPI1_EN_GPIO_Port GPIOB
+#define SPI1_FAULT_Pin GPIO_PIN_7
+#define SPI1_FAULT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 #define MAJOR_SW 1

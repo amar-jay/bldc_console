@@ -1,6 +1,7 @@
 import { SerialPort } from "serialport"
 import { decodeFirstSync } from "cbor"
 import type { BLDCTelemetry, TelemetryRaw } from "./telemetry"
+import { text } from "stream/consumers"
 
 const isLikelyUsbDevice = (path: string) => {
   return (
@@ -80,7 +81,13 @@ const isTelemetryPayload = (value: unknown): value is TelemetryRaw => {
   return (
     typeof value.rpm === "number" &&
     typeof value.rpm_t === "number" &&
-    typeof value.ts === "number"
+    typeof value.ts === "number" &&
+		typeof value.v_a === "number" &&
+		typeof value.v_b === "number" &&
+		typeof value.v_c === "number" &&
+		typeof value.i_a === "number" &&
+		typeof value.i_b === "number" &&
+		typeof value.i_c === "number"
   )
 }
 
@@ -90,6 +97,7 @@ const mapTelemetry = (payload: TelemetryRaw): BLDCTelemetry => {
       actual_rpm: Number(payload.rpm),
       target_rpm: Number(payload.rpm_t),
     },
+		temperature: Number(payload.temp ?? 0),
     currents: {
       phase_a: Number(payload.i_a),
       phase_b: Number(payload.i_b),

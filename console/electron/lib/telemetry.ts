@@ -38,6 +38,7 @@ export type BLDCTelemetry = {
   }
 
   timestamp_ms: number
+	temperature: number
 }
 
 export type TelemetryRaw = {
@@ -62,4 +63,5 @@ export type TelemetryRaw = {
   obs: number
   pll: number
   ang_err: number
+	temp: number
 }

@@ -49,7 +49,8 @@ static void bldc_telem_update(void)
 {
     uint16_t adc[ADC_DMA_CHANNELS];
 
-    if (bldc_telem_adc_dma_read(adc)!=HAL_OK) return;
+    /* bldc_telem_adc_dma_read returns 1 on success, 0 on failure */
+    if (!bldc_telem_adc_dma_read(adc)) return;
 
 
     telem_data.current_phase_a = ADC_TO_CURR(adc[0]);

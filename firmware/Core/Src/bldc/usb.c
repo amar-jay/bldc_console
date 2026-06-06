@@ -50,7 +50,7 @@ static int usb_telem_encode(nanocbor_encoder_t* enc, usb_msg_t msg)
 
     nanocbor_fmt_uint(enc, msg.type);
 
-    nanocbor_fmt_map(enc, 21);
+    nanocbor_fmt_map(enc, 22);
 
     nanocbor_put_tstr(enc, "rpm");
     nanocbor_fmt_float(enc, msg.data.telemetry.rpm_actual);
@@ -114,6 +114,9 @@ static int usb_telem_encode(nanocbor_encoder_t* enc, usb_msg_t msg)
 
     nanocbor_put_tstr(enc, "ang_err");
     nanocbor_fmt_uint(enc, msg.data.telemetry.angle_error_deg);
+
+		nanocbor_put_tstr(enc, "temp");
+		nanocbor_fmt_float(enc, msg.data.telemetry.temp_c);
 
     return nanocbor_encoded_len(enc);
 }
@@ -208,7 +211,7 @@ void usb_msg_tx(usb_msg_t* msg, uint8_t* buf, uint16_t buf_size) {
         if (osMessageQueueGet(usbQueueHandle, msg, NULL, 50) == osOK)
         {
             nanocbor_encoder_t enc;
-            nanocbor_encoder_init(&enc, buf, sizeof(buf));
+            nanocbor_encoder_init(&enc, buf, buf_size);
 
             int len = 0;
 

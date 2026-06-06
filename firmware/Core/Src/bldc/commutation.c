@@ -1,6 +1,8 @@
 #include "bldc.h"
 
-static BLDC_Handle_t bldc_h;
+// global declartion of BLDC handle.
+BLDC_Handle_t bldc_h;
+
 
 void bldc_comm_init(BLDC_Handle_t *motor){
 	bldc_h = *motor;
