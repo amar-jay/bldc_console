@@ -265,23 +265,6 @@ static inline void bldc_dronecan_pub_node_status(void) {
                     (uint16_t)len);
 }
 
-static uint32_t last_1hz = 0;
-static uint32_t last_10hz = 0;
-void bldc_dronecan_pub(void){
-    bldc_dronecan_update();
-    uint32_t now = HAL_GetTick();
-    if (now - last_1hz >= 1000) {
-      last_1hz = now;
-      bldc_dronecan_pub_node_status();
-    }
-    
-    if (now - last_10hz >= 100) {
-      last_10hz = now;
-      bldc_dronecan_pub_esc_status();
-    }
-}
-
-
 void bldc_dronecan_update(void) {
     // 1. Hardware CAN RX
     // Check if new CAN frames are available in your hardware driver / HAL buffer.
@@ -300,3 +283,21 @@ void bldc_dronecan_update(void) {
     //     }
     // }
 }
+
+
+static uint32_t last_1hz = 0;
+static uint32_t last_10hz = 0;
+void bldc_dronecan_pub(void){
+    bldc_dronecan_update();
+    uint32_t now = HAL_GetTick();
+    if (now - last_1hz >= 1000) {
+      last_1hz = now;
+      bldc_dronecan_pub_node_status();
+    }
+    
+    if (now - last_10hz >= 100) {
+      last_10hz = now;
+      bldc_dronecan_pub_esc_status();
+    }
+}
+

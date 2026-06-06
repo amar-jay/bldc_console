@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "bldc.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -64,6 +64,16 @@ uint32_t rand32(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ADC_Ph0_Curr_Pin GPIO_PIN_0
+#define ADC_Ph0_Curr_GPIO_Port GPIOA
+#define ADC_Ph1_Curr_Pin GPIO_PIN_1
+#define ADC_Ph1_Curr_GPIO_Port GPIOA
+#define ADC_Ph2_Curr_Pin GPIO_PIN_2
+#define ADC_Ph2_Curr_GPIO_Port GPIOA
+#define ADC_V_Sense_Pin GPIO_PIN_3
+#define ADC_V_Sense_GPIO_Port GPIOA
+#define ADC_Temp_Pin GPIO_PIN_4
+#define ADC_Temp_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 #define MAJOR_SW 1

@@ -95,7 +95,7 @@ void bldc_comm_set_duty(uint16_t duty)
     __HAL_TIM_SET_COMPARE(bldc_h.htim, bldc_h.chC, duty);
 }
 
-void bldc_comm_commutate(uint8_t step)
+void bldc_comm_trapeziod(uint8_t step)
 {
     TIM_TypeDef *t = bldc_h.htim->Instance;
 

@@ -13,9 +13,20 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 // Uncomment this if using advanced timers with complementary outputs (e.g., TIM1, TIM8)
 // #define BLDC_COMPLEMENTARY_DRIVE
+// #define BLDC_TELEM_USE_DEMO
+#define ADC_MAX_COUNT             4095.0f
+#define ADC_REF_VOLT              3.3f
+#define PHASE_CURRENT_ZERO_V      1.65f
+#define PHASE_CURRENT_V_PER_A     0.100f
+#define BUS_VOLTAGE_DIVIDER_RATIO 11.0f // = (R_h + R_l) / R_l 
+#define THERMISTOR_PULLUP        10000.0f
+#define THERMISTOR_R25           10000.0f
+#define THERMISTOR_BETA          3950.0f
+#define ADC_CHANNEL_COUNT         5U
+#define BATTERY_CAPACITY_WH       100.0f
 
 /* -------------------------------------------------------------------------- */
-/* Phase output mappings for TIM3                                                  */
+/* mappings 						                                                      */
 /* -------------------------------------------------------------------------- */
 #define PHASE_1_CH TIM_CHANNEL_1
 #define CH1E       TIM_CCER_CC1E
@@ -29,6 +40,16 @@ extern "C" {
 #define CH3E       TIM_CCER_CC3E
 #define CH3NE      TIM_CCER_CC3NE
 
+
+#define ADC_TO_VOLT(x)            (((float)(x) / ADC_MAX_COUNT) * ADC_REF_VOLT)
+#define ADC_TO_CURR(x)         		(ADC_TO_VOLT(x) - PHASE_CURRENT_ZERO_V) / PHASE_CURRENT_V_PER_A
+
+#define IIR_FILTER_ALPHA 0.1f
+#define IIR_FILTER(prev, curr) prev = ((IIR_FILTER_ALPHA * (curr)) + ((1.0f - IIR_FILTER_ALPHA) * (prev)))
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define CLAMP(x, min_val, max_val) (MIN(MAX((x), (min_val)), (max_val)))
 /* -------------------------------------------------------------------------- */
 /* Type definitions                                                             */
 /* -------------------------------------------------------------------------- */
@@ -43,10 +64,12 @@ typedef enum {
  * @brief BLDC hardware handle used by the low-level motor driver.
  */
 typedef struct {
-    TIM_HandleTypeDef *htim;
+    TIM_HandleTypeDef *htim; // Timer handle for PWM generation
     uint32_t chA;
     uint32_t chB;
     uint32_t chC;
+
+ 		ADC_HandleTypeDef hadc; // ADC handle for current/voltage sensing
 } BLDC_Handle_t;
 
 /**
@@ -124,6 +147,9 @@ typedef struct {
     uint8_t obs_confidence;
     uint8_t pll_lock_status;
     uint8_t angle_error_deg;
+
+		// TODO: not added to the Electron cbor IPC yet. 
+		float temp_c;
 } bldc_telemetry_t;
 
 /**
@@ -170,8 +196,10 @@ bldc_settings_t* bldc_get_settings(void);
 void usb_msg_tx(usb_msg_t* msg, uint8_t* buf, uint16_t buf_size);
 void usb_msg_rx(uint8_t *Buf, uint32_t *Len);
 
-void TelemThread(void *argument);
-void UsbThread(void *argument);
+
+#ifdef BLDC_TELEM_USE_DEMO
+void gen_demo_telemetry(bldc_telemetry_t* telem_data);
+#endif
 
 #ifdef __cplusplus
 }

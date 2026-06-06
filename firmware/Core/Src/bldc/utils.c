@@ -1,5 +1,5 @@
 #include "main.h"
-
+#include "math.h"
 void dwt_init(void)
 {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -96,3 +96,54 @@ uint32_t rand32(void)
 
     return xorshift32();
 }
+
+#ifdef BLDC_TELEM_USE_DEMO
+void gen_demo_telemetry(bldc_telemetry_t* telem_data)
+{
+    static float t = 0.0f;
+    static float angle = 0.0f;
+    static float energy_used = 0.0f;
+
+    t += 0.01f;
+
+    telem_data->rpm_actual = 1500.0f + 400.0f * sinf(t) + 120.0f * sinf(2.7f * t);
+    telem_data->rpm_target = 1600.0f;
+
+    {
+        float i_amp = 0.8f + 0.3f * sinf(0.8f * t);
+        telem_data->current_phase_a = 2.0f + i_amp * sinf(t * 1.5f);
+        telem_data->current_phase_b = 2.0f + i_amp * sinf(t * 1.5f + 2.094f);
+        telem_data->current_phase_c = 2.0f + i_amp * sinf(t * 1.5f + 4.188f);
+    }
+
+    {
+        float v_amp = 0.5f + 0.1f * sinf(0.3f * t);
+        telem_data->voltage_phase_a = 24.0f + v_amp * sinf(t * 0.3f);
+        telem_data->voltage_phase_b = 24.0f + v_amp * sinf(t * 0.3f + 2.094f);
+        telem_data->voltage_phase_c = 24.0f + v_amp * sinf(t * 0.3f + 4.188f);
+    }
+
+    telem_data->i_d = 0.3f * sinf(0.7f * t);
+    telem_data->i_q = 1.2f + 0.5f * sinf(0.9f * t);
+
+    angle += telem_data->rpm_actual * 0.001f;
+    if (angle > 360.0f)
+        angle -= 360.0f;
+
+    telem_data->angle_mechanical = angle;
+    telem_data->angle_electrical = fmodf(angle * 7.0f, 360.0f);
+
+    telem_data->battery_voltage = 48.0f - 0.005f * t;
+    telem_data->battery_current = 8.0f + 2.0f * sinf(0.5f * t);
+
+    energy_used += (telem_data->battery_voltage * telem_data->battery_current) * 0.00001f;
+    telem_data->energy_used_wh = energy_used;
+    telem_data->energy_rem_wh = 100.0f - energy_used;
+
+    telem_data->bemf_strength = (uint8_t)(fminf(255.0f, fabsf(0.01f * telem_data->rpm_actual * sinf(1.5f * t))));
+    telem_data->obs_confidence = (uint8_t)((0.7f + 0.3f * sinf(0.4f * t)) * 100.0f);
+    telem_data->pll_lock_status = (fabsf(sinf(0.8f * t)) > 0.5f) ? 1U : 0U;
+    telem_data->angle_error_deg = (uint8_t)(fabsf(5.0f * sinf(1.1f * t)));
+    telem_data->timestamp_ms = millis32();
+}
+#endif
