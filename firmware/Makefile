@@ -1,19 +1,20 @@
-ELF_FILE = build/Debug/demo_stm32f411.elf
+BOARD = demo_stm32f411
+ELF_FILE = build/Debug/$(BOARD).elf
 
 
-build: clean
+build: dsdl_gen_build
 	cmake --preset Debug 
 	cmake --build --preset Debug
 
-bin_create:
-		arm-none-eabi-objcopy -O binary ${ELF_FILE} build/firmware.bin
-		arm-none-eabi-objcopy -O ihex  ${ELF_FILE} build/firmware.hex
+bins:
+		arm-none-eabi-objcopy -O binary $(ELF_FILE) build/firmware.bin
+		arm-none-eabi-objcopy -O ihex  $(ELF_FILE) build/firmware.hex
 
-flash: build bin_create
+flash: build bins
 	if command -v openocd >/dev/null 2>&1; then \
 		cd build && \
 		openocd -f interface/stlink.cfg -f target/stm32f4x.cfg \
-		  -c "program Debug/demo_stm32f411.elf verify reset exit"; \
+		  -c "program Debug/$(BOARD).elf verify reset exit"; \
 	else \
 		echo "No suitable flashing tool found. Please install openocd"; \
 		exit 1; \
@@ -23,26 +24,31 @@ flash: build bin_create
 # =========================
 # DSDL GEN DRONCAN
 # =========================
-BASE=firmware/Middleware/Third_Party
-CANARD_BASE=$(BASE)/libcanard
-GEN_DIR=$(BASE)/dsdl_generated
+TP_BASE=Middlewares/Third_Party
+GEN_DIR=$(TP_BASE)/dsdl_generated
 
 dsdl_gen:
-	git clone --depth 1 https://github.com/DroneCAN/DSDL
+	@test -d $(TP_BASE)/DSDL || git clone --depth 1 https://github.com/DroneCAN/DSDL $(TP_BASE)/DSDL
 
 dsdlc:
-	git clone --depth 1 https://github.com/DroneCAN/dronecan_dsdlc
+	@test -d $(TP_BASE)/dronecan_dsdlc || git clone --depth 1 https://github.com/DroneCAN/dronecan_dsdlc $(TP_BASE)/dronecan_dsdlc
 
-dsdl_gen_build: dsdl_gen dsdlc
+libcanard:
+	@test -d $(TP_BASE)/libcanard || git clone https://github.com/dronecan/libcanard $(TP_BASE)/libcanard	
+
+dsdl_gen_build: libcanard dsdl_gen dsdlc
 	python3 dronecan_dsdlc/dronecan_dsdlc.py \
 		-O $(GEN_DIR) \
 		DSDL/uavcan \
 		DSDL/dronecan
 
-# dsdl_build: dsdl_gen_build servo_node.c
+# test_dsdl_build: dsdl_gen_build servo_node.c
 # 	$(CC) -o servo_node servo_node.c $(LIBS) $(CFLAGS)
 
 clean:
-	rm -rf build DSDL $(GEN_DIR)
+	rm -rf build
 
-.PHONY: bin_create flash clean
+distclean: clean
+	rm -rf $(TP_BASE)/libcanard $(TP_BASE)/DSDL $(TP_BASE)/dronecan_dsdlc $(GEN_DIR)
+
+.PHONY: bin_create flash clean distclean dsdl_gen dsdlc dsdl_gen_build

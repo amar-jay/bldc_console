@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 #include <string.h>
-#include <stdio.h>
-
 extern SPI_HandleTypeDef hspi1;
 
 enum {
@@ -91,20 +89,20 @@ static void drv8323r_modify_reg(uint8_t reg, uint16_t clear_mask, uint16_t set_b
 
 static void drv8323r_fault_append(const char *text, size_t *offset)
 {
-	if (*offset >= sizeof(drv8323r_fault_buf)) {
+	size_t remaining = sizeof(drv8323r_fault_buf) - *offset;
+	if (remaining <= 1U) {
 		return;
 	}
 
-	int written = snprintf(&drv8323r_fault_buf[*offset],
-						   sizeof(drv8323r_fault_buf) - *offset,
-						   "%s", text);
-	if (written > 0) {
-		if ((size_t)written >= sizeof(drv8323r_fault_buf) - *offset) {
-			*offset = sizeof(drv8323r_fault_buf) - 1U;
-		} else {
-			*offset += (size_t)written;
-		}
+	size_t text_len = strlen(text);
+	size_t copy_len = text_len;
+	if (copy_len >= remaining) {
+		copy_len = remaining - 1U;
 	}
+
+	memcpy(&drv8323r_fault_buf[*offset], text, copy_len);
+	*offset += copy_len;
+	drv8323r_fault_buf[*offset] = '\0';
 }
 
 void bldc_drv8323r_init(void)
