@@ -1,63 +1,15 @@
 # BLDC Motor Firmware Project
 
 Guidelines for AI agents and contributors working in this repository.
+Current repository is for the Console 
 
 ## What This Project Is
 
-A two-part **BLDC motor controller** system:
-
-1. **`firmware/`** — Embedded C on **STM32F411** (Cortex-M4F). Drives a 3-phase BLDC motor via a **TI DRV8323R** gate driver, samples phase current / bus voltage / temperature over ADC, and streams telemetry to a host over **USB CDC** (virtual serial port). Includes scaffolding for **sensorless FOC** and **DroneCAN**, much of which is not yet wired to real control loops.
 2. **`console/`** — **Electron + React + TypeScript** desktop dashboard. Connects to the firmware over serial, decodes **CBOR** telemetry frames, and renders live motor diagnostics in chart cards.
 
 The long-term goal is sensorless FOC diagnostics, ESC tuning, and DroneCAN integration. Several UI and protocol paths exist but are only partially connected — see [Current State & Gaps](#current-state--gaps).
 
 ---
-
-## Repository Layout
-
-```
-.
-├── AGENTS.md                 # This file
-├── .clangd                   # Points compile DB at firmware/build/Debug
-├── console/                  # Electron desktop app
-│   ├── electron/             # Main process (serial, IPC, file I/O)
-│   │   ├── main.ts           # BrowserWindow + ipcMain handlers
-│   │   ├── preload.ts        # contextBridge → window.api
-│   │   └── lib/
-│   │       ├── serial.ts     # Port discovery, CBOR decode, telemetry mapping
-│   │       ├── telemetry.ts  # BLDCTelemetry / TelemetryRaw types
-│   │       └── file.ts       # Save exports to ~/Documents/BLDC/
-│   └── src/                  # React renderer (Vite)
-│       ├── windows/          # Route-level pages (main, settings, console)
-│       ├── cards/            # Dashboard telemetry widgets
-│       ├── components/       # Shared UI (top-bar, device-list, charts, shadcn/ui)
-│       ├── hooks/            # useUsbDevices
-│       └── types/electron.d.ts  # window.api + TelemetryData globals
-└── firmware/
-    ├── demo_stm32f411.ioc    # STM32CubeMX project (source of truth for HAL config)
-    ├── CMakeLists.txt        # Top-level build; globs Core/Src/bldc/*.c
-    ├── CMakePresets.json     # Debug/Release Ninja presets
-    ├── Makefile              # Convenience: build, flash, DSDL code-gen
-    ├── Core/
-    │   ├── Inc/bldc.h        # Public BLDC API, settings/telemetry structs, hardware constants
-    │   └── Src/
-    │       ├── main.c        # HAL init, RTOS tasks, peripheral handles
-    │       └── bldc/         # All custom motor logic lives here
-    │           ├── commutation.c   # PWM phase commutation (trapezoidal)
-    │           ├── drv8323r.c        # SPI driver for gate driver IC
-    │           ├── telem.c           # ADC DMA sampling, telemetry publish
-    │           ├── usb.c             # CBOR encode/decode, USB TX/RX thread
-    │           ├── dronecan.c        # libcanard protocol scaffolding
-    │           └── utils.c           # DWT timestamps, device ID, demo telemetry
-    ├── USB_DEVICE/           # STM32 USB CDC stack
-    ├── Drivers/              # STM32 HAL + CMSIS (generated/vendor)
-    └── Middlewares/
-        ├── ST/               # USB device library, FreeRTOS
-        └── Third_Party/      # libcanard, NanoCBOR, DSDL submodules
-```
-
----
-
 ## Architecture & Data Flow
 
 ```
