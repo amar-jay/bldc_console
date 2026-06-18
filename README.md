@@ -31,7 +31,7 @@ Real ADC data for phase currents, bus voltage, and NTC temperature is live. RPM,
 Working end-to-end: trapezoidal drive + real telemetry over USB → dashboard charts.  
 FOC control loops, settings sync, and DroneCAN I/O are incomplete / stubbed.
 
-For development without hardware, enable `BLDC_TELEM_USE_DEMO` in `firmware/Core/Inc/bldc.h`.
+For development without hardware, enable `BLDC_TELEM_USE_DEMO` in `stm32g431/Core/Inc/bldc.h`.
 
 > [!NOTE]
 > This repository is a part of the BLDC-Motor-Driver project: [https://github.com/alpi753/BLDC-Motor-Driver](https://github.com/alpi753/BLDC-Motor-Driver)

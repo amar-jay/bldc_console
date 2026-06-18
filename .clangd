@@ -1,5 +1,5 @@
 CompileFlags:
-  CompilationDatabase: firmware/build/Debug
+  CompilationDatabase: stm32g431/build/Debug
   QueryDriver:
     - /usr/bin/arm-none-eabi-gcc
     - /usr/bin/arm-none-eabi-g++
