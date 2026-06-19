@@ -21,7 +21,6 @@ import {
   Gauge,
   Radar,
   Play,
-  ShieldCheck,
   Save,
   Trash2,
   Upload,
@@ -134,7 +133,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="motor" className="w-full max-w-4xl mx-auto mt-6">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="motor" className="gap-2">
               <Cpu className="h-4 w-4" /> Motor
             </TabsTrigger>
@@ -146,9 +145,6 @@ export default function Settings() {
             </TabsTrigger>
             <TabsTrigger value="startup" className="gap-2">
               <Play className="h-4 w-4" /> Startup
-            </TabsTrigger>
-            <TabsTrigger value="limits" className="gap-2">
-              <ShieldCheck className="h-4 w-4" /> Limits
             </TabsTrigger>
           </TabsList>
 
@@ -169,14 +165,6 @@ export default function Settings() {
                   step={1}
                   min={1}
                   onChange={(value) => updateField("pp", value)}
-                />
-                <SettingsField
-                  id="kv"
-                  label="Motor KV (RPM/V)"
-                  hint="CBOR key: kv"
-                  value={settings.kv}
-                  min={0}
-                  onChange={(value) => updateField("kv", value)}
                 />
                 <SettingsField
                   id="rs"
@@ -206,6 +194,15 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
                 <SettingsField
+                  id="rpm_t"
+                  label="Target RPM"
+                  hint="CBOR key: rpm_t — 0 keeps the motor idle"
+                  value={settings.rpm_t}
+                  min={0}
+                  step={50}
+                  onChange={(value) => updateField("rpm_t", value)}
+                />
+                <SettingsField
                   id="i_kp"
                   label="Current Kp"
                   value={settings.i_kp}
@@ -230,10 +227,12 @@ export default function Settings() {
                   onChange={(value) => updateField("s_ki", value)}
                 />
                 <SettingsField
-                  id="idt"
-                  label="Id target (A)"
-                  value={settings.idt}
-                  onChange={(value) => updateField("idt", value)}
+                  id="l_i"
+                  label="Max phase current (A)"
+                  hint="CBOR key: l_i — iq ceiling in closed loop"
+                  value={settings.l_i}
+                  min={0}
+                  onChange={(value) => updateField("l_i", value)}
                 />
               </CardContent>
             </Card>
@@ -259,13 +258,6 @@ export default function Settings() {
                   label="PLL Ki"
                   value={settings.p_ki}
                   onChange={(value) => updateField("p_ki", value)}
-                />
-                <SettingsField
-                  id="bemf"
-                  label="BEMF filter cutoff (Hz)"
-                  value={settings.bemf}
-                  min={0}
-                  onChange={(value) => updateField("bemf", value)}
                 />
                 <SettingsField
                   id="obs"
@@ -300,10 +292,27 @@ export default function Settings() {
               <CardContent className="grid grid-cols-2 gap-4">
                 <SettingsField
                   id="ramp"
-                  label="Ramp time (ms)"
+                  label="Open-loop hand-off time (ms)"
+                  hint="CBOR key: ramp"
                   value={settings.ramp}
                   min={0}
                   onChange={(value) => updateField("ramp", value)}
+                />
+                <SettingsField
+                  id="align_t"
+                  label="Alignment time (ms)"
+                  hint="CBOR key: align_t"
+                  value={settings.align_t}
+                  min={0}
+                  onChange={(value) => updateField("align_t", value)}
+                />
+                <SettingsField
+                  id="ol_ramp"
+                  label="Open-loop ramp (RPM/s)"
+                  hint="CBOR key: ol_ramp"
+                  value={settings.ol_ramp}
+                  min={0}
+                  onChange={(value) => updateField("ol_ramp", value)}
                 />
                 <SettingsField
                   id="align"
@@ -322,8 +331,8 @@ export default function Settings() {
                       <SelectValue placeholder="Select mode" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">Open-loop ramp</SelectItem>
-                      <SelectItem value="1">Alignment + hand-off</SelectItem>
+                      <SelectItem value="0">Alignment + hand-off</SelectItem>
+                      <SelectItem value="1">Open-loop ramp (skip align)</SelectItem>
                       <SelectItem value="2">Direct closed-loop</SelectItem>
                     </SelectContent>
                   </Select>
@@ -334,76 +343,35 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="limits" className="space-y-4">
-            <Card>
-              <CardHeader className="text-left">
-                <CardTitle>Safety limits</CardTitle>
-                <CardDescription>
-                  Firmware-side derating and shutdown thresholds.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                <SettingsField
-                  id="l_i"
-                  label="Max phase current (A)"
-                  value={settings.l_i}
-                  min={0}
-                  onChange={(value) => updateField("l_i", value)}
-                />
-                <SettingsField
-                  id="l_v"
-                  label="Max bus voltage (V)"
-                  value={settings.l_v}
-                  min={0}
-                  onChange={(value) => updateField("l_v", value)}
-                />
-                <SettingsField
-                  id="l_t"
-                  label="Max temperature (°C)"
-                  value={settings.l_t}
-                  min={0}
-                  onChange={(value) => updateField("l_t", value)}
-                />
-                <SettingsField
-                  id="l_cd"
-                  label="Derating start current (A)"
-                  value={settings.l_cd}
-                  min={0}
-                  onChange={(value) => updateField("l_cd", value)}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between text-destructive">
-                  <div className="space-y-0.5 text-left">
-                    <Label className="text-destructive font-semibold">
-                      Reset motor defaults
-                    </Label>
-                    <p className="text-[12px] text-destructive/80">
-                      Restore firmware parameter defaults in this form.
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-destructive/30 hover:bg-destructive/10 text-destructive h-8 gap-2 no-drag-area"
-                    onClick={resetToDefaults}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Reset
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
+
+        <Card className="max-w-4xl mx-auto mt-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between text-destructive">
+              <div className="space-y-0.5 text-left">
+                <Label className="text-destructive font-semibold">
+                  Reset motor defaults
+                </Label>
+                <p className="text-[12px] text-destructive/80">
+                  Restore firmware parameter defaults in this form.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-destructive/30 hover:bg-destructive/10 text-destructive h-8 gap-2 no-drag-area"
+                onClick={resetToDefaults}
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Reset
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Separator className="max-w-4xl mx-auto my-6" />
         <p className="max-w-4xl mx-auto text-xs text-muted-foreground text-left pb-4">
           Protocol: CBOR array{" "}
-          <code className="font-mono">[1, {"{ pp, kv, … }"}]</code> at 115200
+          <code className="font-mono">[1, {"{ pp, rs, … }"}]</code> at 115200
           baud. Firmware applies each key via <code className="font-mono">usb_msg_rx</code>{" "}
           in <code className="font-mono">telem.c</code>.
         </p>
