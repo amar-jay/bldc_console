@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { contextBridge, ipcRenderer } from 'electron'
+import type { MotorSettings } from './lib/settings'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -20,6 +21,8 @@ contextBridge.exposeInMainWorld("api", {
 		disconnect: (id: string) => ipcRenderer.invoke("usb:disconnect", id),
     refresh: () => ipcRenderer.invoke("usb:refresh"),
     sendData: (data: string) => ipcRenderer.invoke("usb:send-data", data),
+    sendSettings: (settings: MotorSettings) =>
+      ipcRenderer.invoke("usb:send-settings", settings),
     onUpdate: (cb: (devices: any[]) => void) => {
       const handler = (_: any, devices: any[]) => cb(devices)
 
@@ -40,13 +43,23 @@ contextBridge.exposeInMainWorld("api", {
 	  offData: () => {
 	    ipcRenderer.removeAllListeners("usb:data")
     },
+    getTelemetryHistory: () =>
+      ipcRenderer.invoke("usb:get-telem-history") as Promise<unknown[]>,
     onTelemetry: (callback: (telem: unknown) => void) => {
       const handler = (_: unknown, telem: unknown) => callback(telem)
       ipcRenderer.on("usb:telem", handler)
       return () => ipcRenderer.removeListener("usb:telem", handler)
     },
+    onTelemetryHistory: (callback: (history: unknown[]) => void) => {
+      const handler = (_: unknown, history: unknown[]) => callback(history)
+      ipcRenderer.on("usb:telem-history", handler)
+      return () => ipcRenderer.removeListener("usb:telem-history", handler)
+    },
     offTelemetry: () => {
       ipcRenderer.removeAllListeners("usb:telem")
-	  }
+	  },
+    offTelemetryHistory: () => {
+      ipcRenderer.removeAllListeners("usb:telem-history")
+    },
   },
 })

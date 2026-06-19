@@ -4,14 +4,15 @@ import Settings from './windows/settings'
 import Main from './windows/main'
 import { Toaster } from "@/components/ui/sonner"
 import Console from './windows/console'
-import SubWindowLayout from './components/sub-window-layout'
-import MotorSpeedCard from './cards/motor-speed'
-import PhaseCurrentsCard from './cards/phase-currents'
-import MotorXticsCard from './cards/motor-xtics'
-import BatteryCapCard from './cards/battery-cap'
-import PhaseVoltageCard from './cards/phase-voltage'
-import ElecMechAngleCard from './cards/elec-mech-angle'
-import DQRefFrameCard from './cards/dq-ref-frame'
+import {
+  BatteryCapWindow,
+  DQFrameWindow,
+  ElecMechAngleWindow,
+  MotorSpeedWindow,
+  MotorXticsWindow,
+  PhaseCurrentsWindow,
+  PhaseVoltageWindow,
+} from './windows/card-windows'
 
 
 function App() {
@@ -21,15 +22,14 @@ function App() {
         <Route path="/" element={<Main />} />
         <Route path="/settings" element={<Settings />} />
 				<Route path="/console" element={<Console/>} />
-        
-        {/* Sub Windows for Cards */}
-        <Route path="/card/motor-speed" element={<SubWindowLayout title="Motor Speed"><MotorSpeedCard/></SubWindowLayout>} />
-        <Route path="/card/phase-currents" element={<SubWindowLayout title="Phase Currents"><PhaseCurrentsCard/></SubWindowLayout>} />
-        <Route path="/card/motor-xtics" element={<SubWindowLayout title="Motor Characteristics"><MotorXticsCard/></SubWindowLayout>} />
-        <Route path="/card/battery-cap" element={<SubWindowLayout title="Battery Capacity"><BatteryCapCard/></SubWindowLayout>} />
-        <Route path="/card/phase-voltage" element={<SubWindowLayout title="Phase Voltages"><PhaseVoltageCard/></SubWindowLayout>} />
-        <Route path="/card/elec-mech" element={<SubWindowLayout title="Angles"><ElecMechAngleCard/></SubWindowLayout>} />
-        <Route path="/card/dq-frame" element={<SubWindowLayout title="DQ Reference Frame"><DQRefFrameCard/></SubWindowLayout>} />
+
+        <Route path="/card/motor-speed" element={<MotorSpeedWindow />} />
+        <Route path="/card/phase-currents" element={<PhaseCurrentsWindow />} />
+        <Route path="/card/motor-xtics" element={<MotorXticsWindow />} />
+        <Route path="/card/battery-cap" element={<BatteryCapWindow />} />
+        <Route path="/card/phase-voltage" element={<PhaseVoltageWindow />} />
+        <Route path="/card/elec-mech" element={<ElecMechAngleWindow />} />
+        <Route path="/card/dq-frame" element={<DQFrameWindow />} />
       </Routes>
       <Toaster duration={1000} />
     </>

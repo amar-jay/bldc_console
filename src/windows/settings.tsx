@@ -1,185 +1,412 @@
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { 
-  Settings as SettingsIcon, 
-  Cpu, 
-  Unplug, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Settings as SettingsIcon,
+  Cpu,
+  Gauge,
+  Radar,
+  Play,
   ShieldCheck,
   Save,
   Trash2,
+  Upload,
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import SubWindowHeader from '@/components/sub-window-header'
+import SubWindowHeader from "@/components/sub-window-header"
+import { SettingsField } from "@/components/settings-field"
+import { useMotorSettings } from "@/hooks/use-motor-settings"
+import { useUsbDevices } from "@/hooks/use-devices"
+import { toast } from "sonner"
 
 export default function Settings() {
-  const closeWindow = () => {
-    window.close()
+  const { devices } = useUsbDevices()
+  const {
+    settings,
+    dirty,
+    updateField,
+    resetToDefaults,
+    persistLocally,
+  } = useMotorSettings()
+  const [sending, setSending] = useState(false)
+
+  const connectedDevice = useMemo(
+    () => devices.find((device) => device.connected),
+    [devices]
+  )
+
+  const handleSave = async () => {
+    persistLocally()
+
+    if (!connectedDevice) {
+      toast.warning("Saved locally", {
+        description: "Connect a device to send settings to firmware.",
+      })
+      return
+    }
+
+    if (!window.api.usb.sendSettings) {
+      toast.error("Settings transport is unavailable in this build.")
+      return
+    }
+
+    setSending(true)
+    try {
+      await window.api.usb.sendSettings(settings)
+      toast.success("Settings sent to firmware", {
+        description: connectedDevice.path,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error("Failed to send settings", { description: message })
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-background border border-accent-foreground/30 shadow-2xl overflow-hidden flex flex-col rounded-2xl">
-      {/* Draggable Header */}
-			<SubWindowHeader windowTitle="System Settings" Icon={SettingsIcon} />
+      <SubWindowHeader windowTitle="System Settings" Icon={SettingsIcon} />
+
       <div className="flex-1 overflow-y-auto p-6 pt-4">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Internal Page Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-left">Settings</h1>
-              <p className="text-sm text-muted-foreground text-left">Manage your hardware and application preferences.</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-left">
+                Motor Settings
+              </h1>
+              <p className="text-sm text-muted-foreground text-left">
+                Edit FOC and ESC parameters, then send them to the connected
+                firmware over USB CBOR.
+              </p>
             </div>
-            <Button 
-              size="sm" 
-              className="gap-2 no-drag-area"
-              onClick={closeWindow}
+            <Button
+              size="sm"
+              className="gap-2 no-drag-area shrink-0"
+              onClick={() => void handleSave()}
+              disabled={sending}
             >
-              <Save className="h-4 w-4" />
-              Save Changes
+              {connectedDevice ? (
+                <Upload className="h-4 w-4" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {sending
+                ? "Sending…"
+                : connectedDevice
+                  ? "Save & Send"
+                  : "Save Locally"}
             </Button>
           </div>
+
+          <Card>
+            <CardContent className="pt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
+              <div className="text-left">
+                <p className="font-medium">Device</p>
+                <p className="text-muted-foreground">
+                  {connectedDevice
+                    ? `${connectedDevice.manufacturer ?? "USB"} — ${connectedDevice.path}`
+                    : "No device connected — settings will be stored locally only."}
+                </p>
+              </div>
+              {dirty ? (
+                <span className="text-xs text-amber-500">Unsaved changes</span>
+              ) : (
+                <span className="text-xs text-muted-foreground">Up to date</span>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <Tabs defaultValue="hardware" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="hardware" className="gap-2">
-               <Cpu className="h-4 w-4" /> Hardware
+        <Tabs defaultValue="motor" className="w-full max-w-4xl mx-auto mt-6">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
+            <TabsTrigger value="motor" className="gap-2">
+              <Cpu className="h-4 w-4" /> Motor
             </TabsTrigger>
-            <TabsTrigger value="telemetry" className="gap-2">
-               <Unplug className="h-4 w-4" /> Connectivity
+            <TabsTrigger value="control" className="gap-2">
+              <Gauge className="h-4 w-4" /> Control
             </TabsTrigger>
-            <TabsTrigger value="ui" className="gap-2">
-               <SettingsIcon className="h-4 w-4" /> General
+            <TabsTrigger value="observer" className="gap-2">
+              <Radar className="h-4 w-4" /> Observer
             </TabsTrigger>
-            <TabsTrigger value="safety" className="gap-2">
-               <ShieldCheck className="h-4 w-4" /> Safety
+            <TabsTrigger value="startup" className="gap-2">
+              <Play className="h-4 w-4" /> Startup
+            </TabsTrigger>
+            <TabsTrigger value="limits" className="gap-2">
+              <ShieldCheck className="h-4 w-4" /> Limits
             </TabsTrigger>
           </TabsList>
 
-          {/* Hardware Tab */}
-          <TabsContent value="hardware" className="space-y-4">
+          <TabsContent value="motor" className="space-y-4">
             <Card>
               <CardHeader className="text-left">
-                <CardTitle>Motor Configuration</CardTitle>
-                <CardDescription>Setup parameters for your BLDC motor controller.</CardDescription>
+                <CardTitle>Motor parameters</CardTitle>
+                <CardDescription>
+                  Physical motor constants used by the FOC observer and limits.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4 text-left">
-                  <div className="space-y-2">
-                    <Label htmlFor="pole-pairs">Pole Pairs</Label>
-                    <Input id="pole-pairs" type="number" placeholder="7" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="kv-rating">Motor KV</Label>
-                    <Input id="kv-rating" type="number" placeholder="1000" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5 text-left">
-                    <Label>Hall Sensor Feedback</Label>
-                    <p className="text-[12px] text-muted-foreground">Enable if using motors with Hall effect sensors.</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="text-left">
-                <CardTitle>Power Limits</CardTitle>
-                <CardDescription>Voltage and current safety thresholds.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4 text-left">
-                  <div className="space-y-2">
-                    <Label htmlFor="max-current">Max Amperage (A)</Label>
-                    <Input id="max-current" type="number" placeholder="40.0" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cutoff-voltage">Low Voltage Cutoff (V)</Label>
-                    <Input id="cutoff-voltage" type="number" placeholder="10.5" />
-                  </div>
-                </div>
+              <CardContent className="grid grid-cols-2 gap-4">
+                <SettingsField
+                  id="pp"
+                  label="Pole pairs"
+                  hint="CBOR key: pp"
+                  value={settings.pp}
+                  step={1}
+                  min={1}
+                  onChange={(value) => updateField("pp", value)}
+                />
+                <SettingsField
+                  id="kv"
+                  label="Motor KV (RPM/V)"
+                  hint="CBOR key: kv"
+                  value={settings.kv}
+                  min={0}
+                  onChange={(value) => updateField("kv", value)}
+                />
+                <SettingsField
+                  id="rs"
+                  label="Phase resistance (Ω)"
+                  hint="CBOR key: rs"
+                  value={settings.rs}
+                  min={0}
+                  onChange={(value) => updateField("rs", value)}
+                />
+                <SettingsField
+                  id="ls"
+                  label="Phase inductance (H)"
+                  hint="CBOR key: ls"
+                  value={settings.ls}
+                  min={0}
+                  onChange={(value) => updateField("ls", value)}
+                />
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Connectivity Tab */}
-          <TabsContent value="telemetry" className="space-y-4">
+          <TabsContent value="control" className="space-y-4">
             <Card>
               <CardHeader className="text-left">
-                <CardTitle>Serial Communication</CardTitle>
-                <CardDescription>Configure telemetry data stream settings.</CardDescription>
+                <CardTitle>Current & speed loops</CardTitle>
+                <CardDescription>PI gains and d-axis current target.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="grid grid-cols-2 gap-4">
+                <SettingsField
+                  id="i_kp"
+                  label="Current Kp"
+                  value={settings.i_kp}
+                  onChange={(value) => updateField("i_kp", value)}
+                />
+                <SettingsField
+                  id="i_ki"
+                  label="Current Ki"
+                  value={settings.i_ki}
+                  onChange={(value) => updateField("i_ki", value)}
+                />
+                <SettingsField
+                  id="s_kp"
+                  label="Speed Kp"
+                  value={settings.s_kp}
+                  onChange={(value) => updateField("s_kp", value)}
+                />
+                <SettingsField
+                  id="s_ki"
+                  label="Speed Ki"
+                  value={settings.s_ki}
+                  onChange={(value) => updateField("s_ki", value)}
+                />
+                <SettingsField
+                  id="idt"
+                  label="Id target (A)"
+                  value={settings.idt}
+                  onChange={(value) => updateField("idt", value)}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="observer" className="space-y-4">
+            <Card>
+              <CardHeader className="text-left">
+                <CardTitle>Observer & PLL</CardTitle>
+                <CardDescription>
+                  Sensorless observer tuning (active when FOC is implemented).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4">
+                <SettingsField
+                  id="p_kp"
+                  label="PLL Kp"
+                  value={settings.p_kp}
+                  onChange={(value) => updateField("p_kp", value)}
+                />
+                <SettingsField
+                  id="p_ki"
+                  label="PLL Ki"
+                  value={settings.p_ki}
+                  onChange={(value) => updateField("p_ki", value)}
+                />
+                <SettingsField
+                  id="bemf"
+                  label="BEMF filter cutoff (Hz)"
+                  value={settings.bemf}
+                  min={0}
+                  onChange={(value) => updateField("bemf", value)}
+                />
+                <SettingsField
+                  id="obs"
+                  label="Observer gain"
+                  value={settings.obs}
+                  onChange={(value) => updateField("obs", value)}
+                />
+                <SettingsField
+                  id="min_cl"
+                  label="Min closed-loop RPM"
+                  value={settings.min_cl}
+                  min={0}
+                  onChange={(value) => updateField("min_cl", value)}
+                />
+                <SettingsField
+                  id="max_ol"
+                  label="Max open-loop RPM"
+                  value={settings.max_ol}
+                  min={0}
+                  onChange={(value) => updateField("max_ol", value)}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="startup" className="space-y-4">
+            <Card>
+              <CardHeader className="text-left">
+                <CardTitle>Startup sequence</CardTitle>
+                <CardDescription>Ramp and alignment before closed-loop.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4">
+                <SettingsField
+                  id="ramp"
+                  label="Ramp time (ms)"
+                  value={settings.ramp}
+                  min={0}
+                  onChange={(value) => updateField("ramp", value)}
+                />
+                <SettingsField
+                  id="align"
+                  label="Alignment current (A)"
+                  value={settings.align}
+                  min={0}
+                  onChange={(value) => updateField("align", value)}
+                />
                 <div className="space-y-2 text-left">
-                  <Label htmlFor="baud-rate">Baud Rate</Label>
-                  <Input id="baud-rate" type="number" placeholder="115200" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5 text-left">
-                    <Label>Auto-reconnect</Label>
-                    <p className="text-[12px] text-muted-foreground">Automatically try to reconnect if connection is lost.</p>
-                  </div>
-                  <Switch />
+                  <Label htmlFor="smode">Startup mode</Label>
+                  <Select
+                    value={String(settings.smode)}
+                    onValueChange={(value) => updateField("smode", Number(value))}
+                  >
+                    <SelectTrigger id="smode" className="no-drag-area">
+                      <SelectValue placeholder="Select mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Open-loop ramp</SelectItem>
+                      <SelectItem value="1">Alignment + hand-off</SelectItem>
+                      <SelectItem value="2">Direct closed-loop</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[12px] text-muted-foreground">
+                    CBOR key: smode (uint8)
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* General Tab */}
-          <TabsContent value="ui" className="space-y-4">
+          <TabsContent value="limits" className="space-y-4">
             <Card>
               <CardHeader className="text-left">
-                <CardTitle>Application Settings</CardTitle>
-                <CardDescription>Customize the interface behaviors.</CardDescription>
+                <CardTitle>Safety limits</CardTitle>
+                <CardDescription>
+                  Firmware-side derating and shutdown thresholds.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5 text-left">
-                    <Label>Dark Mode</Label>
-                    <p className="text-[12px] text-muted-foreground">Use the dark theme across the application.</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <Separator />
+              <CardContent className="grid grid-cols-2 gap-4">
+                <SettingsField
+                  id="l_i"
+                  label="Max phase current (A)"
+                  value={settings.l_i}
+                  min={0}
+                  onChange={(value) => updateField("l_i", value)}
+                />
+                <SettingsField
+                  id="l_v"
+                  label="Max bus voltage (V)"
+                  value={settings.l_v}
+                  min={0}
+                  onChange={(value) => updateField("l_v", value)}
+                />
+                <SettingsField
+                  id="l_t"
+                  label="Max temperature (°C)"
+                  value={settings.l_t}
+                  min={0}
+                  onChange={(value) => updateField("l_t", value)}
+                />
+                <SettingsField
+                  id="l_cd"
+                  label="Derating start current (A)"
+                  value={settings.l_cd}
+                  min={0}
+                  onChange={(value) => updateField("l_cd", value)}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
                 <div className="flex items-center justify-between text-destructive">
                   <div className="space-y-0.5 text-left">
-                    <Label className="text-destructive font-semibold">Reset Settings</Label>
-                    <p className="text-[12px] text-destructive/80">Revert all preferences to default values.</p>
+                    <Label className="text-destructive font-semibold">
+                      Reset motor defaults
+                    </Label>
+                    <p className="text-[12px] text-destructive/80">
+                      Restore firmware parameter defaults in this form.
+                    </p>
                   </div>
-                  <Button variant="outline" size="sm" className="border-destructive/30 hover:bg-destructive/10 text-destructive h-8 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-destructive/30 hover:bg-destructive/10 text-destructive h-8 gap-2 no-drag-area"
+                    onClick={resetToDefaults}
+                  >
                     <Trash2 className="h-3.5 w-3.5" /> Reset
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* Safety Tab */}
-          <TabsContent value="safety" className="space-y-4">
-            <Card className="border-orange-500/20 bg-orange-500/5">
-              <CardHeader className="text-left">
-                <CardTitle className="text-orange-500 flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5" /> Emergency Protocols
-                </CardTitle>
-                <CardDescription>Critical safety overrides.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5 text-left">
-                    <Label>Kill Switch Hotkey</Label>
-                    <p className="text-[12px] text-muted-foreground">Use 'Spacebar' as a global emergency stop.</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
+
+        <Separator className="max-w-4xl mx-auto my-6" />
+        <p className="max-w-4xl mx-auto text-xs text-muted-foreground text-left pb-4">
+          Protocol: CBOR array{" "}
+          <code className="font-mono">[1, {"{ pp, kv, … }"}]</code> at 115200
+          baud. Firmware applies each key via <code className="font-mono">usb_msg_rx</code>{" "}
+          in <code className="font-mono">telem.c</code>.
+        </p>
       </div>
     </div>
   )

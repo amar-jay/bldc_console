@@ -1,10 +1,12 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import isDev from 'electron-is-dev'
-import { connectDevice, listDevices, sendDataToPort, setupPortReader } from './lib/serial'
+import { connectDevice, listDevices, sendDataToPort, sendSettingsToPort, setupPortReader } from './lib/serial'
+import type { MotorSettings } from './lib/settings'
 import { Menu } from 'electron'
 import { SerialPort } from 'serialport'
 import type { BLDCTelemetry } from './lib/telemetry'
+import { TELEMETRY_HISTORY_LENGTH } from './lib/telemetry'
 import { saveFile } from './lib/file'
 
 // Multi-window support
@@ -40,6 +42,12 @@ export function createWindow(urlPath: string = '') {
 
   windows.add(win)
 
+  win.webContents.once('did-finish-load', () => {
+    if (telemetryHistory.length > 0) {
+      win.webContents.send('usb:telem-history', telemetryHistory)
+    }
+  })
+
   win.on('closed', () => {
     windows.delete(win)
   })
@@ -53,6 +61,26 @@ export function createWindow(urlPath: string = '') {
 let devices: any[] = []
 let connectedPort: SerialPort | null = null
 let connectedPath: string | null = null
+let telemetryHistory: BLDCTelemetry[] = []
+
+const broadcastTelemetryHistory = () => {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('usb:telem-history', telemetryHistory)
+  })
+}
+
+const pushTelemetry = (telem: BLDCTelemetry) => {
+  telemetryHistory = [...telemetryHistory, telem].slice(-TELEMETRY_HISTORY_LENGTH)
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('usb:telem', telem)
+    win.webContents.send('usb:telem-history', telemetryHistory)
+  })
+}
+
+const clearTelemetryHistory = () => {
+  telemetryHistory = []
+  broadcastTelemetryHistory()
+}
 
 const setupConnectedPortReader = () => {
   if (!connectedPort) {
@@ -70,12 +98,12 @@ const setupConnectedPortReader = () => {
       })
     },
     onTelemetry: (telem: BLDCTelemetry) => {
-      BrowserWindow.getAllWindows().forEach(win => {
-        win.webContents.send("usb:telem", telem)
-      })
+      pushTelemetry(telem)
     },
   })
 }
+
+ipcMain.handle('usb:get-telem-history', () => telemetryHistory)
 
 ipcMain.handle("file:save-file", async (_, data: ArrayBuffer, filePath: string) => {
 	if (!filePath) throw new Error("File path is required")
@@ -88,6 +116,13 @@ ipcMain.handle("usb:send-data", async (_, data: string) => {
 	if (!connectedPort.writable) throw new Error("Port is not writable")
 
 	return sendDataToPort(connectedPort, data)
+})
+
+ipcMain.handle("usb:send-settings", async (_, settings: MotorSettings) => {
+  if (!connectedPort) throw new Error("No device connected")
+  if (!connectedPort.writable) throw new Error("Port is not writable")
+
+  return sendSettingsToPort(connectedPort, settings)
 })
 
 ipcMain.handle("usb:setup-port-reader", async () => {
@@ -117,6 +152,7 @@ ipcMain.handle("usb:connect", async (_, path: string) => {
       })
       connectedPort = null
       connectedPath = null
+      clearTelemetryHistory()
     }
 
     connectedPort = await connectDevice(path)
@@ -163,6 +199,7 @@ ipcMain.handle("usb:disconnect", async (_, path: string) => {
       })
       connectedPort = null
       connectedPath = null
+      clearTelemetryHistory()
     }
 
     devices = devices.map((d) =>

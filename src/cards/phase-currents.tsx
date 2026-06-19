@@ -13,9 +13,10 @@ const fallbackCurrentDrawData: PhaseCurrentPoint[] = [
 
 type PhaseCurrentsCardProps = {
   data?: PhaseCurrentPoint[]
+  dataRevision?: string
 }
 
-export default function PhaseCurrentsCard({ data }: PhaseCurrentsCardProps) {
+export default function PhaseCurrentsCard({ data, dataRevision }: PhaseCurrentsCardProps) {
 	const chartData = data && data.length > 0 ? data : fallbackCurrentDrawData
 
 	return (
@@ -28,6 +29,7 @@ export default function PhaseCurrentsCard({ data }: PhaseCurrentsCardProps) {
           </div>
           <div className="flex-1 min-h-50 w-full">
             <BarChart
+              key={dataRevision ?? "fallback"}
               className="size-full"
               data={chartData}
               xKey="phase"

@@ -90,10 +90,11 @@ export function RadarChart<TData extends Record<string, unknown>>({
               key={item.dataKey}
               name={item.dataKey}
               dataKey={item.dataKey}
-              stroke={`var(--color-${item.dataKey})`}  // ✅ uncommented
-              fill={`var(--color-${item.dataKey})`}    // ✅ uncommented
+              stroke={`var(--color-${item.dataKey})`}
+              fill={`var(--color-${item.dataKey})`}
               fillOpacity={item.fillOpacity ?? 0.5}
               strokeWidth={item.strokeWidth ?? 2}
+              isAnimationActive={false}
             />
           ))}
           {showLegend && (

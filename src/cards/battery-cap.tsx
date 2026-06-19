@@ -4,14 +4,18 @@ import { RadialChart } from "@/components/charts/radial"
 type BatteryCapCardProps = {
   usedWh?: number
   remainingWh?: number
+  dataRevision?: string
 }
 
 export default function BatteryCapCard({
   usedWh = 640,
   remainingWh = 360,
+  dataRevision,
 }: BatteryCapCardProps) {
+	const safeUsed = Math.max(usedWh, 0)
+	const safeRemaining = Math.max(remainingWh, 0)
 	const batteryData = [
-	  { name: 'Power', used: usedWh, remaining: remainingWh }
+	  { name: 'Power', used: safeUsed, remaining: safeRemaining }
 	]
 
 	return (
@@ -24,10 +28,11 @@ export default function BatteryCapCard({
           </div>
           <div className="flex-1 min-h-50 w-full relative">
             <RadialChart
+              key={dataRevision ?? "fallback"}
               className="size-full"
               data={batteryData}
               centerLabel="Wh remaining"
-              centerValue={Math.round(remainingWh)}
+              centerValue={Math.round(safeRemaining)}
               series={[
                 { dataKey: 'remaining', label: 'Remaining', stackId: 'a', color: 'var(--chart-2)' },
                 { dataKey: 'used', label: 'Used', stackId: 'a', color: 'var(--muted)' },

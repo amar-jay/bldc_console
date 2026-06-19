@@ -94,6 +94,7 @@ export function RadialChart<TData extends Record<string, unknown>>({
                 stackId={item.stackId ?? item.dataKey}
                 cornerRadius={item.cornerRadius ?? 5}
                 className="stroke-transparent stroke-2 pt-0"
+                isAnimationActive={false}
               />
             ))}
 

@@ -1,4 +1,9 @@
+export const TELEMETRY_HISTORY_LENGTH = 40
+
+export const DEVICE_ID_LEN = 16
+
 export type BLDCTelemetry = {
+  device_id: string
   speed: {
     actual_rpm: number
     target_rpm: number
@@ -42,6 +47,7 @@ export type BLDCTelemetry = {
 }
 
 export type TelemetryRaw = {
+  id?: Uint8Array
   rpm: number
   rpm_t: number
   i_a: number

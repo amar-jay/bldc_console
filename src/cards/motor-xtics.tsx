@@ -60,9 +60,10 @@ const fallbackPerformanceData: MotorXticPoint[] = [
 
 type MotorXticsCardProps = {
   data?: MotorXticPoint[]
+  dataRevision?: string
 }
 
-export default function MotorXticsCard({ data }: MotorXticsCardProps) {
+export default function MotorXticsCard({ data, dataRevision }: MotorXticsCardProps) {
 	const chartData = data && data.length > 0 ? data : fallbackPerformanceData
 
 	return (
@@ -75,6 +76,7 @@ export default function MotorXticsCard({ data }: MotorXticsCardProps) {
           </div>
           <div className="flex-1 min-h-62.5 w-full flex items-center justify-center">
             <RadarChart
+              key={dataRevision ?? "fallback"}
               className="size-full"
               data={chartData}
               indexKey="attribute"

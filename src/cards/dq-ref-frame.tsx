@@ -1,7 +1,8 @@
 import { LineChart } from "@/components/charts/line"
 
 export type DQFramePoint = {
-  time: string
+  sample: number
+  timeLabel: string
   id: number
   iq: number
 }
@@ -10,7 +11,8 @@ const generateFallbackDQData = (): DQFramePoint[] => {
   const data: DQFramePoint[] = []
   for (let i = 0; i < 50; i++) {
     data.push({
-      time: `${i * 10}ms`,
+      sample: i,
+      timeLabel: `+${(i * 0.1).toFixed(1)}s`,
       id: 5 + Math.sin(i / 6) * 0.2,
       iq: 12 + Math.cos(i / 7) * 0.5,
     })
@@ -22,9 +24,10 @@ const fallbackDQData = generateFallbackDQData()
 
 type DQRefFrameCardProps = {
   data?: DQFramePoint[]
+  dataRevision?: string
 }
 
-export default function DQRefFrameCard({ data }: DQRefFrameCardProps) {
+export default function DQRefFrameCard({ data, dataRevision }: DQRefFrameCardProps) {
   const chartData = data && data.length > 0 ? data : fallbackDQData
 
   return (
@@ -39,14 +42,15 @@ export default function DQRefFrameCard({ data }: DQRefFrameCardProps) {
         <LineChart
           className="size-full"
           data={chartData}
-          xKey="time"
+          xKey="sample"
+          dataRevision={dataRevision}
+          tooltipLabelKey="timeLabel"
           series={[
             { dataKey: 'iq', label: 'Iq (Torque)', color: 'var(--chart-2)', type: 'monotone' },
             { dataKey: 'id', label: 'Id (Flux)', color: 'var(--chart-1)', type: 'monotone' },
           ]}
           showGrid={true}
           yTickFormatter={(val) => `${val}A`}
-          tooltipLabelFormatter={(val) => `Time: ${val}`}
         />
       </div>
     </div>

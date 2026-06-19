@@ -16,13 +16,17 @@ let buffer = Buffer.alloc(0);
 port.on('data', (chunk) => {
     buffer = Buffer.concat([buffer, chunk]);
 
-    try {
-        const value = cbor.decodeFirstSync(buffer);
-        console.log(value);
+    while (buffer.length > 0) {
+        try {
+            const decoded = cbor.decodeFirstSync(buffer, { extendedResults: true });
+            const consumed = decoded.length;
+            if (!consumed || consumed <= 0) break;
 
-        buffer = Buffer.alloc(0); // reset after success
-    } catch (e) {
-        // wait for more data
+            console.log(decoded.value);
+            buffer = buffer.subarray(consumed);
+        } catch (e) {
+            break;
+        }
     }
 });
 

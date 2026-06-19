@@ -1,7 +1,19 @@
 import { SerialPort } from "serialport"
 import { decodeFirstSync } from "cbor"
 import type { BLDCTelemetry, TelemetryRaw } from "./telemetry"
-import { text } from "stream/consumers"
+import { DEVICE_ID_LEN } from "./telemetry"
+import {
+  encodeSettingsMessage,
+  isSettingsPayload,
+  type MotorSettings,
+  USB_MSG_SETTINGS,
+} from "./settings"
+
+type CborDecodeResult = {
+  value: unknown
+  /** Number of input bytes consumed by this decode. */
+  length: number
+}
 
 const isLikelyUsbDevice = (path: string) => {
   return (
@@ -68,6 +80,7 @@ const initializedPorts = new Set<SerialPort>()
 type PortReaderHandlers = {
   onMessage?: (msg: string) => void
   onTelemetry?: (telemetry: BLDCTelemetry) => void
+  onSettings?: (settings: MotorSettings) => void
 }
 
 
@@ -91,8 +104,25 @@ const isTelemetryPayload = (value: unknown): value is TelemetryRaw => {
   )
 }
 
+const bytesToHex = (bytes: Uint8Array): string => {
+  return Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+}
+
+const mapDeviceId = (id: TelemetryRaw["id"]): string => {
+  if (!id || id.length === 0) {
+    return ""
+  }
+
+  const trimmed =
+    id.length >= DEVICE_ID_LEN ? id.subarray(0, DEVICE_ID_LEN) : id
+  return bytesToHex(trimmed)
+}
+
 const mapTelemetry = (payload: TelemetryRaw): BLDCTelemetry => {
   return {
+    device_id: mapDeviceId(payload.id),
     speed: {
       actual_rpm: Number(payload.rpm),
       target_rpm: Number(payload.rpm_t),
@@ -128,6 +158,39 @@ const mapTelemetry = (payload: TelemetryRaw): BLDCTelemetry => {
     },
     timestamp_ms: Number(payload.ts),
   }
+}
+
+export async function sendBinaryToPort(
+  port: SerialPort,
+  data: Buffer
+): Promise<void> {
+  if (data.length === 0) {
+    return
+  }
+
+  return new Promise((resolve, reject) => {
+    port.write(data, (err) => {
+      if (err) {
+        reject(err)
+        return
+      }
+
+      port.drain((drainErr) => {
+        if (drainErr) {
+          reject(drainErr)
+        } else {
+          resolve()
+        }
+      })
+    })
+  })
+}
+
+export async function sendSettingsToPort(
+  port: SerialPort,
+  settings: MotorSettings
+): Promise<void> {
+  return sendBinaryToPort(port, encodeSettingsMessage(settings))
 }
 
 export async function sendDataToPort(
@@ -171,21 +234,22 @@ export function setupPortReader(port: SerialPort, handlers: PortReaderHandlers) 
       try {
         const decoded = decodeFirstSync(buffer, {
           extendedResults: true,
-        }) as { value: unknown; bytes: number };
+        }) as CborDecodeResult;
 
-        if (!decoded?.bytes || decoded.bytes <= 0) {
+        const consumed = decoded.length;
+        if (!consumed || consumed <= 0) {
           break;
         }
 
         const frame = decoded.value;
 
-        buffer = buffer.subarray(decoded.bytes); // IMPORTANT: advance buffer safely
+        buffer = buffer.subarray(consumed);
 
         if (Array.isArray(frame) && frame.length >= 2) {
-          const [type, payload] = frame;
-					console.log("Received frame:", { type, payload })
-
-          if (isTelemetryPayload(payload)) {
+          const [msgType, payload] = frame;
+          if (msgType === USB_MSG_SETTINGS && isSettingsPayload(payload)) {
+            handlers.onSettings?.(payload);
+          } else if (isTelemetryPayload(payload)) {
             handlers.onTelemetry?.(mapTelemetry(payload));
           } else if (typeof payload === "string") {
             handlers.onMessage?.(payload);

@@ -16,6 +16,7 @@ import {
 	type ChartConfig,
 } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+import { TELEMETRY_HISTORY_LENGTH } from "@/lib/telemetry-series"
 
 const DEFAULT_LINE_COLORS = [
 	"var(--chart-1)",
@@ -45,6 +46,10 @@ export type LineChartProps<TData extends Record<string, unknown>> =
 		showGrid?: boolean
 		showTooltip?: boolean
 		yAxisWidth?: number
+		xAxisType?: "number" | "category"
+		xDomain?: [number, number]
+		dataRevision?: string
+		tooltipLabelKey?: keyof TData & string
 		xTickFormatter?: (value: unknown) => string
 		yTickFormatter?: (value: unknown) => string
 		tooltipLabelFormatter?: (label: unknown) => React.ReactNode
@@ -59,6 +64,10 @@ function LineChart<TData extends Record<string, unknown>>({
 	showGrid = true,
 	showTooltip = true,
 	yAxisWidth = 44,
+	xAxisType = "number",
+	xDomain = [0, TELEMETRY_HISTORY_LENGTH - 1],
+	dataRevision,
+	tooltipLabelKey,
 	xTickFormatter,
 	yTickFormatter,
 	tooltipLabelFormatter,
@@ -79,9 +88,17 @@ function LineChart<TData extends Record<string, unknown>>({
 	}, [series])
 
 	const formatTooltipLabel = React.useCallback(
-		(value: unknown) => {
+		(value: unknown, payload?: readonly unknown[]) => {
 			if (tooltipLabelFormatter) {
 				return tooltipLabelFormatter(value)
+			}
+
+			if (tooltipLabelKey && payload?.length) {
+				const row = payload[0] as { payload?: Record<string, unknown> }
+				const label = row?.payload?.[tooltipLabelKey]
+				if (typeof label === "string" || typeof label === "number") {
+					return label
+				}
 			}
 
 			if (typeof value === "string" || typeof value === "number") {
@@ -90,25 +107,32 @@ function LineChart<TData extends Record<string, unknown>>({
 
 			return null
 		},
-		[tooltipLabelFormatter]
+		[tooltipLabelFormatter, tooltipLabelKey]
 	)
+
+	const chartKey = dataRevision ?? `${data.length}-${String(data.at(-1)?.[xKey] ?? "")}`
 
 	return (
 		<ChartContainer config={config} className={cn("aspect-auto min-h-[150px]", className)} {...props}>
 			<RechartsLineChart
+				key={chartKey}
 				data={data}
-				margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
+				margin={{ top: 12, right: 12, left: 0, bottom: 4 }}
 			>
 				{showGrid ? (
 					<CartesianGrid vertical={false} strokeDasharray="3 3" />
 				) : null}
 				<XAxis
 					dataKey={xKey as string}
+					type={xAxisType}
+					domain={xAxisType === "number" ? xDomain : undefined}
+					allowDecimals={false}
 					axisLine={false}
 					tickLine={false}
 					tickMargin={10}
 					tickFormatter={xTickFormatter}
 					minTickGap={24}
+					tickCount={xAxisType === "number" ? 6 : undefined}
 				/>
 				<YAxis
 					axisLine={false}
@@ -116,6 +140,7 @@ function LineChart<TData extends Record<string, unknown>>({
 					tickMargin={10}
 					width={yAxisWidth}
 					tickFormatter={yTickFormatter}
+					domain={["auto", "auto"]}
 				/>
 				{showTooltip ? (
 					<ChartTooltip
@@ -142,6 +167,7 @@ function LineChart<TData extends Record<string, unknown>>({
 							strokeDasharray={item.dashArray}
 							dot={item.dot ?? false}
 							connectNulls={item.connectNulls ?? true}
+							isAnimationActive={false}
 							activeDot={{ r: 4 }}
 						/>
 					)

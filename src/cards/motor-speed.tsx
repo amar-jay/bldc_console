@@ -1,25 +1,27 @@
 import { LineChart } from "@/components/charts/line"
 
 export type MotorSpeedPoint = {
-  time: string
+  sample: number
+  timeLabel: string
   rpm: number
   target: number
 }
 
 const fallbackMotorSpeedData: MotorSpeedPoint[] = [
-  { time: '08:00', rpm: 1240, target: 1200 },
-  { time: '08:05', rpm: 1310, target: 1250 },
-  { time: '08:10', rpm: 1385, target: 1325 },
-  { time: '08:15', rpm: 1460, target: 1400 },
-  { time: '08:20', rpm: 1425, target: 1400 },
-  { time: '08:25', rpm: 1510, target: 1480 },
+  { sample: 0, timeLabel: '+0.0s', rpm: 1240, target: 1200 },
+  { sample: 1, timeLabel: '+0.5s', rpm: 1310, target: 1250 },
+  { sample: 2, timeLabel: '+1.0s', rpm: 1385, target: 1325 },
+  { sample: 3, timeLabel: '+1.5s', rpm: 1460, target: 1400 },
+  { sample: 4, timeLabel: '+2.0s', rpm: 1425, target: 1400 },
+  { sample: 5, timeLabel: '+2.5s', rpm: 1510, target: 1480 },
 ]
 
 type MotorSpeedCardProps = {
   data?: MotorSpeedPoint[]
+  dataRevision?: string
 }
 
-export default function MotorSpeedCard({ data }: MotorSpeedCardProps) {
+export default function MotorSpeedCard({ data, dataRevision }: MotorSpeedCardProps) {
 	const chartData = data && data.length > 0 ? data : fallbackMotorSpeedData
 
 	return (
@@ -34,12 +36,14 @@ export default function MotorSpeedCard({ data }: MotorSpeedCardProps) {
             <LineChart
               className="size-full"
               data={chartData}
-              xKey="time"
+              xKey="sample"
+              dataRevision={dataRevision}
+              tooltipLabelKey="timeLabel"
               series={[
                 { dataKey: 'rpm', label: 'Actual RPM' },
                 { dataKey: 'target', label: 'Target RPM', dashArray: '6 6' },
               ]}
-              tooltipLabelFormatter={(value) => `Time: ${String(value)}`}
+              xTickFormatter={(value) => `${value}`}
             />
           </div>
         </div>

@@ -1,7 +1,8 @@
 import { LineChart } from "@/components/charts/line"
 
 export type AnglePoint = {
-  time: string
+  sample: number
+  timeLabel: string
   mechanical: number
   electrical: number
 }
@@ -12,10 +13,10 @@ const generateFallbackAngleTimeSeries = (): AnglePoint[] => {
   const totalPoints = 50
   
   for (let i = 0; i < totalPoints; i++) {
-    const time = i
     const mechanical = (i * 15) % 360 // Simulating rotation over time
     data.push({
-      time: `${time}ms`,
+      sample: i,
+      timeLabel: `+${(i * 0.1).toFixed(1)}s`,
       mechanical: mechanical,
       electrical: (mechanical * polePairs) % 360,
     })
@@ -27,9 +28,10 @@ const fallbackAngleTimeSeriesData = generateFallbackAngleTimeSeries()
 
 type ElecMechAngleCardProps = {
   data?: AnglePoint[]
+  dataRevision?: string
 }
 
-export default function ElecMechAngleCard({ data }: ElecMechAngleCardProps) {
+export default function ElecMechAngleCard({ data, dataRevision }: ElecMechAngleCardProps) {
   const chartData = data && data.length > 0 ? data : fallbackAngleTimeSeriesData
 
   return (
@@ -44,14 +46,15 @@ export default function ElecMechAngleCard({ data }: ElecMechAngleCardProps) {
         <LineChart
           className="size-full"
           data={chartData}
-          xKey="time"
+          xKey="sample"
+          dataRevision={dataRevision}
+          tooltipLabelKey="timeLabel"
           series={[
-            { dataKey: 'mechanical', label: 'Mech Angle', color: 'var(--chart-1)', type: 'linear', strokeWidth: 2 },
-            { dataKey: 'electrical', label: 'Elec Angle', color: 'var(--chart-2)', type: 'linear', strokeWidth: 1.5 },
+            { dataKey: 'mechanical', label: 'Mech Angle', color: 'var(--chart-1)', type: 'monotone', strokeWidth: 2 },
+            { dataKey: 'electrical', label: 'Elec Angle', color: 'var(--chart-2)', type: 'monotone', strokeWidth: 1.5 },
           ]}
           showGrid={true}
-          yTickFormatter={(val) => `${val}°`}
-          tooltipLabelFormatter={(val) => `Time: ${val}`}
+          yTickFormatter={(val) => `${Number(val).toFixed(0)}°`}
         />
       </div>
     </div>

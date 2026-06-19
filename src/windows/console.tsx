@@ -145,7 +145,7 @@ export default function Console() {
         id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString([], { hour12: false }),
         type: "info",
-        text: `TELEM rpm=${telem.speed.actual_rpm.toFixed(1)} target=${telem.speed.target_rpm.toFixed(1)} vbat=${telem.voltages.battery.toFixed(2)} ts=${telem.timestamp_ms}`,
+        text: `TELEM id=${telem.device_id || "—"} rpm=${telem.speed.actual_rpm.toFixed(1)} target=${telem.speed.target_rpm.toFixed(1)} vbat=${telem.voltages.battery.toFixed(2)} ts=${telem.timestamp_ms}`,
       })
     }
 

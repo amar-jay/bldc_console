@@ -147,7 +147,7 @@ export function BarChart<TData extends Record<string, unknown>>({
             fill={`var(--color-${item.dataKey})`}
             radius={item.radius ?? [4, 4, 0, 0]}
             stackId={item.stackId}
-            // layout={layout}
+            isAnimationActive={false}
           />
         ))}
       </RechartsBarChart>
