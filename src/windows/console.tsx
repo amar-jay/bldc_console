@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import TopBar from "@/components/top-bar"
+import { useDeviceId } from "@/hooks/use-device-id"
+import { formatDeviceIdGrouped, formatDeviceIdShort } from "@/lib/device-id"
 import { toast } from "sonner"
 
 interface ConsoleMessage {
@@ -38,6 +40,7 @@ const sanitizeMessage = (msg: ConsoleMessage): ConsoleMessage => {
 }
 
 export default function Console() {
+  const deviceId = useDeviceId()
   const [messages, setMessages] = React.useState<ConsoleMessage[]>([ //demo
     // start empty; real data will arrive from IPC
   ])
@@ -145,7 +148,7 @@ export default function Console() {
         id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString([], { hour12: false }),
         type: "info",
-        text: `TELEM id=${telem.device_id || "—"} rpm=${telem.speed.actual_rpm.toFixed(1)} target=${telem.speed.target_rpm.toFixed(1)} vbat=${telem.voltages.battery.toFixed(2)} ts=${telem.timestamp_ms}`,
+        text: `TELEM rpm=${telem.speed.actual_rpm.toFixed(1)} target=${telem.speed.target_rpm.toFixed(1)} vbat=${telem.voltages.battery.toFixed(2)} ts=${telem.timestamp_ms}`,
       })
     }
 
@@ -208,13 +211,39 @@ export default function Console() {
         <div className="flex flex-col min-h-0 h-full border bg-card shadow-sm">
           {/* Console Header */}
           <div className="flex items-center justify-between border-b bg-muted/30">
-            <div className="flex items-center gap-2 px-3">
-              <TerminalIcon className="w-4 h-4 text-primary" />
-              <div className="text-left">
-                {/* <h2 className="text-sm font-semibold tracking-tight">Serial Console</h2> */}
-                {/* <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] text-muted-foreground font-mono">115200 bps</span>
-                </div> */}
+            <div className="flex items-center gap-2 px-3 py-1.5 min-w-0">
+              <TerminalIcon className="w-4 h-4 text-primary shrink-0" />
+              <div className="text-left min-w-0">
+                <h2 className="text-sm font-semibold tracking-tight">Serial Console</h2>
+                <div className="flex items-center gap-2 mt-0.5 min-w-0">
+                  <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                    115200 bps
+                  </span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">·</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">Device ID</span>
+                  <button
+                    type="button"
+                    className={cn(
+                      "text-[10px] font-mono truncate max-w-[min(28rem,50vw)] text-left",
+                      deviceId
+                        ? "text-foreground hover:text-primary transition-colors"
+                        : "text-muted-foreground cursor-default"
+                    )}
+                    title={deviceId ? formatDeviceIdGrouped(deviceId) : "Waiting for telemetry"}
+                    disabled={!deviceId}
+                    onClick={async () => {
+                      if (!deviceId) return
+                      try {
+                        await navigator.clipboard.writeText(deviceId)
+                        toast.success("Device ID copied")
+                      } catch {
+                        toast.error("Failed to copy device ID")
+                      }
+                    }}
+                  >
+                    {deviceId ? formatDeviceIdShort(deviceId) : "—"}
+                  </button>
+                </div>
               </div>
             </div>
 
