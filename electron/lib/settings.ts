@@ -1,6 +1,6 @@
 import { encode } from "cbor"
 
-/** Matches `USB_MSG_SETTINGS` in firmware `bldc.h`. */
+/** Matches `USB_MSG_SETTINGS` in firmware `bsp.h`. */
 export const USB_MSG_SETTINGS = 1
 
 /** CBOR map keys — must stay in sync with `settings_encode` / `settings_decode` in `telem.c`. */
