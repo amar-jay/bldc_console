@@ -16,6 +16,10 @@ export type MotorSettings = {
   align_t: number
   ol_ramp: number
   align: number
+  ol_i: number
+  ol_start: number
+  ho_ae: number
+  ho_conf: number
   rpm_t: number
   smode: number
   l_i: number

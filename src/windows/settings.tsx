@@ -287,13 +287,15 @@ export default function Settings() {
             <Card>
               <CardHeader className="text-left">
                 <CardTitle>Startup sequence</CardTitle>
-                <CardDescription>Ramp and alignment before closed-loop.</CardDescription>
+                <CardDescription>
+                  Open-loop ramp, alignment, and observer hand-off thresholds.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
                 <SettingsField
                   id="ramp"
-                  label="Open-loop hand-off time (ms)"
-                  hint="CBOR key: ramp"
+                  label="Open-loop ramp window (ms)"
+                  hint="CBOR key: ramp — max duration to accelerate; hand-off needs observer ready"
                   value={settings.ramp}
                   min={0}
                   onChange={(value) => updateField("ramp", value)}
@@ -317,11 +319,45 @@ export default function Settings() {
                 <SettingsField
                   id="align"
                   label="Alignment current (A)"
+                  hint="CBOR key: align — align phase only"
                   value={settings.align}
                   min={0}
                   onChange={(value) => updateField("align", value)}
                 />
-                <div className="space-y-2 text-left">
+                <SettingsField
+                  id="ol_i"
+                  label="Open-loop torque current (A)"
+                  hint="CBOR key: ol_i"
+                  value={settings.ol_i}
+                  min={0}
+                  onChange={(value) => updateField("ol_i", value)}
+                />
+                <SettingsField
+                  id="ol_start"
+                  label="Open-loop start RPM"
+                  hint="CBOR key: ol_start — capped by min CL / max OL"
+                  value={settings.ol_start}
+                  min={0}
+                  onChange={(value) => updateField("ol_start", value)}
+                />
+                <SettingsField
+                  id="ho_ae"
+                  label="Hand-off max angle error (°)"
+                  hint="CBOR key: ho_ae"
+                  value={settings.ho_ae}
+                  min={0}
+                  onChange={(value) => updateField("ho_ae", value)}
+                />
+                <SettingsField
+                  id="ho_conf"
+                  label="Hand-off min observer confidence"
+                  hint="CBOR key: ho_conf (0–100)"
+                  value={settings.ho_conf}
+                  min={0}
+                  max={100}
+                  onChange={(value) => updateField("ho_conf", value)}
+                />
+                <div className="space-y-2 text-left col-span-2">
                   <Label htmlFor="smode">Startup mode</Label>
                   <Select
                     value={String(settings.smode)}
@@ -331,9 +367,9 @@ export default function Settings() {
                       <SelectValue placeholder="Select mode" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">Alignment + hand-off</SelectItem>
-                      <SelectItem value="1">Open-loop ramp (skip align)</SelectItem>
-                      <SelectItem value="2">Direct closed-loop</SelectItem>
+                      <SelectItem value="0">Alignment + open-loop hand-off</SelectItem>
+                      <SelectItem value="1">Open-loop from start RPM (skip align)</SelectItem>
+                      <SelectItem value="2">Open-loop from min CL RPM (skip align)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[12px] text-muted-foreground">

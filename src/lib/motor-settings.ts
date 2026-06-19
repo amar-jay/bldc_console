@@ -1,6 +1,6 @@
 import type { MotorSettings } from "@/types/settings"
 
-export const MOTOR_SETTINGS_STORAGE_KEY = "bldc.motor-settings.v3"
+export const MOTOR_SETTINGS_STORAGE_KEY = "bldc.motor-settings.v4"
 
 /** Matches firmware `bldc_settings_init_defaults()` / `observer.c` fallbacks. */
 export const DEFAULT_MOTOR_SETTINGS: MotorSettings = {
@@ -20,6 +20,10 @@ export const DEFAULT_MOTOR_SETTINGS: MotorSettings = {
   align_t: 150,
   ol_ramp: 60,
   align: 2,
+  ol_i: 1.5,
+  ol_start: 150,
+  ho_ae: 25,
+  ho_conf: 55,
   rpm_t: 0,
   smode: 0,
   l_i: 20,
@@ -29,6 +33,7 @@ export function loadMotorSettings(): MotorSettings {
   try {
     const raw =
       localStorage.getItem(MOTOR_SETTINGS_STORAGE_KEY) ??
+      localStorage.getItem("bldc.motor-settings.v3") ??
       localStorage.getItem("bldc.motor-settings.v2") ??
       localStorage.getItem("bldc.motor-settings.v1")
     if (!raw) {

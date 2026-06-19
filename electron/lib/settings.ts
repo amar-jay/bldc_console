@@ -21,6 +21,10 @@ export type SettingsRaw = {
   align_t: number
   ol_ramp: number
   align: number
+  ol_i: number
+  ol_start: number
+  ho_ae: number
+  ho_conf: number
   rpm_t: number
   smode: number
   l_i: number
@@ -45,6 +49,10 @@ export const DEFAULT_MOTOR_SETTINGS: MotorSettings = {
   align_t: 150,
   ol_ramp: 60,
   align: 2,
+  ol_i: 1.5,
+  ol_start: 150,
+  ho_ae: 25,
+  ho_conf: 55,
   rpm_t: 0,
   smode: 0,
   l_i: 20,
